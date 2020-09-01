@@ -35,7 +35,7 @@ public class AuthService {
     private final EmailVerificationService emailVerificationService;
     private final UserPreferenceService userPreferenceService;
     public static final char[] VERIFY_EMAIL_ALPHABET =
-            "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     private final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
