@@ -34,6 +34,8 @@ public class AuthService {
     private final JwtTokenHandler tokenHandler;
     private final EmailVerificationService emailVerificationService;
     private final UserPreferenceService userPreferenceService;
+    public static final char[] VERIFY_EMAIL_ALPHABET =
+            "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     private final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
@@ -83,7 +85,7 @@ public class AuthService {
         TokenInfo tokenInfo = new TokenInfo(accessToken, TokenType.BEARER);
 
         EmailVerification emailVerification = new EmailVerification(userSignup.getEmail(),
-                NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, DEFAULT_ALPHABET, 15), true);
+                NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8), true);
 
         emailVerificationService.saveEmail(emailVerification);
         userPreferenceService.createBasePreferenceForUser(newUser);
