@@ -2,6 +2,8 @@ package com.wemeet.dating.api;
 
 
 import com.wemeet.dating.exception.InvalidCredentialException;
+import com.wemeet.dating.model.request.ChangePasswordRequest;
+import com.wemeet.dating.model.request.ResetPasswordRequest;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserLogin;
@@ -73,5 +75,49 @@ public class AuthController {
                 .setResponseCode(ResponseCode.SUCCESS)
                 .build();
     }
+
+
+    @GetMapping(value = "/accounts/forgot-password",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse forgotPassword(@RequestParam String email) throws Exception {
+        authService.generatePasswordToken(email);
+        return new ApiResponse.ResponseBuilder()
+                .setMessage("Please check your email to reset password")
+                .setResponseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @GetMapping(value = "/accounts/verify-password-token",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse passwordTokenVerification(@RequestParam String token, @RequestParam String email) {
+        return new ApiResponse.ResponseBuilder()
+                .setData(authService.verifyForgotPasswordToken(token, email))
+                .setMessage("Verification completed")
+                .setResponseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @PostMapping(value = "/accounts/reset-password",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse resetPassword(@RequestBody ResetPasswordRequest resetPassword) throws Exception {
+        authService.resetPassword(resetPassword);
+        return new ApiResponse.ResponseBuilder()
+                .setMessage("Password Successfully Reset")
+                .setResponseCode(ResponseCode.SUCCESS)
+                .build();
+
+    }
+
+    @PostMapping(value = "/change-password",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse changePassword(@RequestBody ChangePasswordRequest changePassword, @AuthenticationPrincipal UserResult userResult) throws Exception {
+        authService.changePassword(changePassword, userResult.getUser());
+        return new ApiResponse.ResponseBuilder()
+                .setMessage("Password Successfully Changed")
+                .setResponseCode(ResponseCode.SUCCESS)
+                .build();
+
+    }
+
 
 }

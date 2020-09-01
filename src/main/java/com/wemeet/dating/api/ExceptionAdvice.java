@@ -152,9 +152,9 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
     }
 
-    @ExceptionHandler(ResourceFoundException.class)
+    @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    protected ResponseEntity<Object> handleResourceNotFoundExceptionException(ResourceFoundException ex) {
+    protected ResponseEntity<Object> handleResourceNotFoundExceptionException(ResourceNotFoundException ex) {
         ex.printStackTrace();
 
         apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.RESOURCE_NOT_FOUND, ex);
