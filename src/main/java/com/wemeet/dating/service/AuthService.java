@@ -11,6 +11,7 @@ import com.wemeet.dating.model.entity.EmailVerification;
 import com.wemeet.dating.model.entity.ForgotPassword;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.enums.AccountType;
+import com.wemeet.dating.model.enums.DeleteType;
 import com.wemeet.dating.model.enums.TokenType;
 import com.wemeet.dating.model.request.ChangePasswordRequest;
 import com.wemeet.dating.model.request.ResetPasswordRequest;
@@ -207,5 +208,10 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(changePassword.getNewPassword()));
         userService.createOrUpdateUser(user);
 
+    }
+
+    public void deleteUser(User user) {
+
+        userService.deleteUser(user, DeleteType.SELF);
     }
 }

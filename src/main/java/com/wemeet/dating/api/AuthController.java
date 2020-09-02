@@ -120,4 +120,18 @@ public class AuthController {
     }
 
 
+    @PostMapping(value = "/self-delete",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse deleteUser(@AuthenticationPrincipal UserResult userResult) throws Exception {
+        authService.deleteUser( userResult.getUser());
+        return new ApiResponse.ResponseBuilder()
+                .setMessage("Successfully deleted account")
+                .setResponseCode(ResponseCode.SUCCESS)
+                .build();
+
+    }
+
+
+
+
 }
