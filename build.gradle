@@ -22,7 +22,7 @@ repositories {
 }
 
 jar {
-	archivesBaseName="wemeet"
+	archivesBaseName="wemeetbackend"
 	project.version=""
 }
 
