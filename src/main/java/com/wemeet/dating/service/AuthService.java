@@ -48,7 +48,7 @@ public class AuthService {
     public static final char[] VERIFY_EMAIL_ALPHABET =
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
-    private final Logger logger = LoggerFactory.getLogger(AuthService.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Value("${forgot.password.token.expire.hour}")
     private long passwordExpiryInHour;

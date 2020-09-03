@@ -29,7 +29,7 @@ public class JwtTokenHandler {
     public static final String HEADER_STRING = "Authorization";
     public static final String TOKEN_PREFIX = "Bearer ";
 
-    private final Logger logger = LoggerFactory.getLogger(JwtTokenHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Value("${security.jwt.token.secret}")
     private String secretKey;

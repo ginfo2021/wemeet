@@ -13,7 +13,7 @@ public class UserVerificationService {
 
     private final UserService userService;
 
-    private final Logger logger = LoggerFactory.getLogger(UserVerificationService.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
     public UserVerificationService(UserService userService) {

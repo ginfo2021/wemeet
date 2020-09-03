@@ -21,7 +21,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final DeletedUserService deletedUserService;
 
-    private final Logger logger = LoggerFactory.getLogger(UserService.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
     public UserService(UserRepository userRepository, DeletedUserService deletedUserService) {
