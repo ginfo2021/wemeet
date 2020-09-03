@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -27,7 +30,7 @@ public class UserService {
     }
 
     public User findUserByEmail(String email) {
-        User user = userRepository.findByEmail(email);
+        User user = userRepository.findByEmailAndDeletedIsFalse(email);
         return user;
     }
 
@@ -37,11 +40,29 @@ public class UserService {
 
 
     public User findById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        User user = userRepository.findById(id).orElse(null);
+        if (user != null && user.isDeleted()) {
+            return null;
+        }
+        return user;
     }
+
+    public List<User> findAll() {
+        List<User> users = new ArrayList<>();
+        userRepository.findAll().forEach(users::add);
+        //remove deleted users
+        users = users.stream()
+                .filter(user -> !user.isDeleted())
+                .collect(Collectors.toList());
+        return users;
+
+    }
+
 
     @Transactional
     public void deleteUser(User user, DeleteType deleteType) {
+        if (user == null)
+            return;
         user.setDeleted(true);
         createOrUpdateUser(user);
 

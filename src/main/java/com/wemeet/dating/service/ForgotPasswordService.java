@@ -15,7 +15,7 @@ public class ForgotPasswordService {
         this.forgotPasswordRepository = forgotPasswordRepository;
     }
 
-    public ForgotPassword findEntityByToken(String token){
+    public ForgotPassword findByToken(String token){
         return forgotPasswordRepository.findByToken(token);
     }
 

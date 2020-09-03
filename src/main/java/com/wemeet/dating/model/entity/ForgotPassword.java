@@ -21,7 +21,7 @@ public class ForgotPassword {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
-    @NotNull
+    @Column(nullable = false)
     private LocalDateTime expiresAt;
 
     public ForgotPassword() {
