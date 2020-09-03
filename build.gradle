@@ -22,8 +22,14 @@ repositories {
 }
 
 jar {
-	archivesBaseName="wemeetbackend"
+	archiveBaseName="wemeetbackend"
 	project.version=""
+}
+
+docker {
+	name jar.archiveBaseName.get()
+	files "build/libs/${jar.archiveBaseName.get()}"
+	buildArgs([JAR_FILE: jar.archiveBaseName.get()])
 }
 
 dependencies {
