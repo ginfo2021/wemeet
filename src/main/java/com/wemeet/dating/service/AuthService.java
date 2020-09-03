@@ -29,7 +29,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
+import java.time.ZoneId;
 import java.util.ArrayList;
 
 import static com.aventrix.jnanoid.jnanoid.NanoIdUtils.DEFAULT_ALPHABET;
@@ -86,6 +89,7 @@ public class AuthService {
             UserDevice userDevice = new UserDevice(userLogin.getDeviceId(), existingUser);
             userDeviceService.saveUserDevice(userDevice);
         }
+        userPreferenceService.updateUserLocation(existingUser, userLogin);
 
         userResult.setUser(existingUser);
         userResult.setTokenInfo(tokenInfo);
@@ -109,7 +113,7 @@ public class AuthService {
                 NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8), true);
 
         emailVerificationService.saveEmail(emailVerification);
-        userPreferenceService.createBasePreferenceForUser(newUser);
+        userPreferenceService.createBasePreferenceForUser(newUser, userSignup);
         if (StringUtils.hasText(userSignup.getDeviceId())) {
             UserDevice userDevice = new UserDevice(userSignup.getDeviceId(), newUser);
             userDeviceService.saveUserDevice(userDevice);
@@ -119,20 +123,24 @@ public class AuthService {
         return userResult;
     }
 
-    private User buildUserFromSignUp(UserSignup userSignup) {
+    private User buildUserFromSignUp(UserSignup userSignup) throws BadRequestException {
         User newUser = new User();
         newUser.setFirstName(userSignup.getFirstName());
         newUser.setLastName(userSignup.getLastName());
         newUser.setEmail(userSignup.getEmail());
-        newUser.setDateOfBirth(userSignup.getDateOfBirth());
         newUser.setPhone(userSignup.getPhone());
-        newUser.setGender(userSignup.getGender());
         newUser.setActive(false);
         newUser.setPhoneVerified(false);
         newUser.setEmailVerified(false);
         if (userSignup.getPassword() != null) {
             newUser.setPassword(passwordEncoder.encode(userSignup.getPassword()));
         }
+        if (Period.between(userSignup.getDateOfBirth().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate(), LocalDate.now()).getYears() < 18) {
+            throw new BadRequestException("You must Be 18 years to join this platform");
+        }
+        newUser.setDateOfBirth(userSignup.getDateOfBirth());
         newUser.setType(AccountType.FREE);
 
         return newUser;

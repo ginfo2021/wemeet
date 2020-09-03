@@ -1,7 +1,6 @@
 package com.wemeet.dating.model.user;
 
 
-
 import com.wemeet.dating.model.enums.Gender;
 
 import javax.validation.constraints.Email;
@@ -18,17 +17,14 @@ public class UserSignup {
     private String firstName;
     @NotBlank
     private String lastName;
-    @NotNull
-    private Date dateOfBirth;
     @NotBlank
     private String password;
-    private String phone;
     @NotNull
-    private Gender gender;
-
+    private Date dateOfBirth;
+    private String phone;
     private String deviceId;
-
-
+    private Double longitude;
+    private Double latitude;
 
 
     public String getFirstName() {
@@ -68,6 +64,14 @@ public class UserSignup {
         this.password = password;
     }
 
+    public void setDateOfBirth(Date dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public Date getDateOfBirth() {
+        return dateOfBirth;
+    }
+
     public String getPhone() {
         return phone;
     }
@@ -76,26 +80,6 @@ public class UserSignup {
         this.phone = phone;
     }
 
-    
-
-
-    public Date getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(Date dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-
-    }
-
-
-    public Gender getGender() {
-        return gender;
-    }
-
-    public void setGender(Gender gender) {
-        this.gender = gender;
-    }
 
     public String getDeviceId() {
         return deviceId;
@@ -103,5 +87,21 @@ public class UserSignup {
 
     public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }
