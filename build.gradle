@@ -21,9 +21,11 @@ repositories {
 	google()
 }
 
-bootJar {
-	archiveBaseName = 'wemeet'
+jar {
+	archivesBaseName="wemeet"
+	project.version=""
 }
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
