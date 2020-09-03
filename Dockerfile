@@ -1,7 +1,7 @@
 FROM java:openjdk-8-jre
 VOLUME /tmp
 
-ARG JAR_FILE
+ARG JAR_FILE=build/libs/wemeet-0.0.1-SNAPSHOT.jar
 COPY ${JAR_FILE} /app.jar
 
 EXPOSE 4050
