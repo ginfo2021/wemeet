@@ -5,13 +5,6 @@ plugins {
 	id 'com.palantir.docker' version '0.22.1'
 }
 
-docker {
-	name "wemeetbackend"
-	dockerfile file('Dockerfile')
-	copySpec.from(jar).rename(".*","app.jar")
-	buildArgs(['JAR_FILE': "app.jar"])
-}
-
 group = 'com.wemeet'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '1.8'
@@ -28,8 +21,8 @@ repositories {
 	google()
 }
 
-jar {
-	baseName('wemeet')
+bootJar {
+	archiveBaseName = 'wemeet'
 }
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
