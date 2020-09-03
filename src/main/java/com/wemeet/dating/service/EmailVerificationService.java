@@ -16,7 +16,7 @@ public class EmailVerificationService {
     private final EmailVerificationRepository emailVerificationRepository;
     private final UserService userService;
 
-    private final Logger logger = LoggerFactory.getLogger(EmailVerification.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
     public EmailVerificationService(EmailVerificationRepository emailVerificationRepository, UserService userService) {
