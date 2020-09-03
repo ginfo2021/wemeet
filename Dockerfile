@@ -2,7 +2,7 @@ FROM java:openjdk-8-jre
 VOLUME /tmp
 RUN ls
 
-COPY build/libs/wemeet.jar /app.jar
+COPY /build/libs/wemeet.jar /app.jar
 
 EXPOSE 4050
 
