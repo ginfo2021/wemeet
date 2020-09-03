@@ -29,7 +29,7 @@ public class AuthenticationFilter extends GenericFilterBean {
     private final String allowedOrigins;
     private final String allowedMethods;
     private final String allowedHeaders;
-    private final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public AuthenticationFilter(
             JwtTokenHandler tokenHandler, String allowedOrigins,

@@ -16,7 +16,7 @@ public class UserPreferenceService {
 
     private final UserPreferenceRepository userPreferenceRepository;
 
-    private final Logger logger = LoggerFactory.getLogger(UserPreferenceService.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public UserPreferenceService(UserPreferenceRepository userPreferenceRepository) {
         this.userPreferenceRepository = userPreferenceRepository;
