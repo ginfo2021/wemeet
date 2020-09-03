@@ -39,6 +39,25 @@ public class UserVerificationService {
             return false;
         }
 
+    }
+
+    public boolean userNotSuspended() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return false;
+        }
+
+        if (authentication.getPrincipal() instanceof UserResult) {
+            UserResult userResult = (UserResult) authentication.getPrincipal();
+
+            if (userResult == null || userResult.getUser() == null) {
+                return false;
+            }
+            return !userResult.getUser().isSuspended();
+
+        } else {
+            return false;
+        }
 
     }
 }

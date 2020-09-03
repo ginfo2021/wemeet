@@ -13,6 +13,7 @@ import com.wemeet.dating.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -21,6 +22,7 @@ import javax.validation.constraints.NotBlank;
 
 @RestController
 @RequestMapping("v1/auth")
+@Validated
 public class AuthController {
 
 
