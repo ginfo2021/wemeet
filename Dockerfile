@@ -1,14 +1,14 @@
 FROM java:openjdk-8-jre
-RUN mkdir /app
-
-RUN ls /app
+VOLUME /tmp
 
 ARG JARFILE
-COPY ${JARFILE} /app/app.jar
+COPY ${JARFILE} app.jar
+
+RUN ls
 
 EXPOSE 4050
 
 RUN sh -c 'touch /app.jar'
 
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app/app.jar"]
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
 
