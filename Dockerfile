@@ -3,11 +3,11 @@ VOLUME /tmp
 RUN ls
 
 ARG JARFILE
-COPY ${JARFILE} /app.jar
+COPY ${JARFILE} build/libs/app.jar
 
 EXPOSE 4050
 
-RUN bash -c 'touch /app.jar'
+RUN bash -c 'touch build/libs/app.jar'
 
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","build/libs/app.jar"]
 
