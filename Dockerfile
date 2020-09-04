@@ -1,6 +1,6 @@
 FROM java:openjdk-8-jre
 VOLUME /tmp
-ARG JAR_FILE=build/libs/*.jar
+ARG JAR_FILE=/build/libs/*.jar
 COPY ${JAR_FILE} app.jar
 EXPOSE 4050
 RUN sh -c 'touch /app.jar'
