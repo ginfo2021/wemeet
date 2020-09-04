@@ -9,7 +9,7 @@ plugins {
 
 docker {
     name = "wemeet"
-    buildArgs(['JAR_FILE': "wemeet.jar"])
+    buildArgs(['JAR_FILE': "build/libs/wemeet.jar"])
     setDockerfile(file("Dockerfile"))
 }
 
