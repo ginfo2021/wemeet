@@ -2,6 +2,8 @@ package com.wemeet.dating.api;
 
 
 import com.wemeet.dating.exception.BadRequestException;
+import com.wemeet.dating.model.request.UserImageRequest;
+import com.wemeet.dating.model.request.UserLocationRequest;
 import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
@@ -36,11 +38,11 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse updateUserProfile(@Valid @RequestBody UserProfile profileRequest,
-                             @AuthenticationPrincipal UserResult userResult) throws BadRequestException {
+                             @AuthenticationPrincipal UserResult userResult) throws Exception {
         profileRequest.setId(userResult.getUser().getId());
         return new ApiResponse.ResponseBuilder()
                 .setMessage("Successfully saved user profile")
-                .setData(userService.updateUserProfile(profileRequest))
+                .setData(userService.updateUserProfile(profileRequest, userResult.getUser()))
                 .setResponseCode(ResponseCode.SUCCESS)
                 .build();
     }
@@ -48,11 +50,41 @@ public class UserController {
     @NotSuspendedUser(message = "User is suspended")
     @ActiveUser(message = "User not active")
     @GetMapping(value = "/profile", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse getUserProfile(@AuthenticationPrincipal UserResult userResult) throws BadRequestException {
+    public ApiResponse getUserProfile(@AuthenticationPrincipal UserResult userResult) throws Exception {
 
         return new ApiResponse.ResponseBuilder()
                 .setMessage("Fetched UserDetails successfully")
-                .setData(userService.getProfile(userResult.getUser().getId()))
+                .setData(userService.getProfile(userResult.getUser()))
+                .setResponseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
+    @PostMapping(value = "/location",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse updateUserLocation(@Valid @RequestBody UserLocationRequest locationRequest,
+                                         @AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        userService.updateUserLocation(locationRequest, userResult.getUser());
+        return new ApiResponse.ResponseBuilder()
+                .setMessage("Successfully updated user location")
+                .setResponseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
+    @PostMapping(value = "/profile/image",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse updateUserImages(@Valid @RequestBody UserImageRequest imageRequest,
+                                          @AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        userService.updateUserImages(imageRequest, userResult.getUser());
+        return new ApiResponse.ResponseBuilder()
+                .setMessage("Successfully updated user images")
                 .setResponseCode(ResponseCode.SUCCESS)
                 .build();
     }

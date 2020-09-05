@@ -6,6 +6,7 @@ import com.wemeet.dating.config.security.JwtTokenHandler;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.EntityNotFoundException;
 import com.wemeet.dating.exception.InvalidCredentialException;
+import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.TokenInfo;
 import com.wemeet.dating.model.entity.EmailVerification;
 import com.wemeet.dating.model.entity.ForgotPassword;
@@ -211,9 +212,9 @@ public class AuthService {
     }
 
 
-    public void changePassword(ChangePasswordRequest changePassword, User user) throws BadRequestException {
+    public void changePassword(ChangePasswordRequest changePassword, User user) throws BadRequestException, InvalidJwtAuthenticationException {
         if (user == null) {
-            throw new BadRequestException("User does not exist");
+            throw new InvalidJwtAuthenticationException("User with token does not exist");
         }
 
 
