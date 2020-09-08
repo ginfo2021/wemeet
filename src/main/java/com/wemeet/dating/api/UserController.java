@@ -40,10 +40,10 @@ public class UserController {
     public ApiResponse updateUserProfile(@Valid @RequestBody UserProfile profileRequest,
                              @AuthenticationPrincipal UserResult userResult) throws Exception {
         profileRequest.setId(userResult.getUser().getId());
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Successfully saved user profile")
-                .setData(userService.updateUserProfile(profileRequest, userResult.getUser()))
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse.builder()
+                .message("Successfully saved user profile")
+                .data(userService.updateUserProfile(profileRequest, userResult.getUser()))
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
 
@@ -52,10 +52,10 @@ public class UserController {
     @GetMapping(value = "/profile", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse getUserProfile(@AuthenticationPrincipal UserResult userResult) throws Exception {
 
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Fetched UserDetails successfully")
-                .setData(userService.getProfile(userResult.getUser()))
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse.builder()
+                .message("Fetched UserDetails successfully")
+                .data(userService.getProfile(userResult.getUser()))
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
 
@@ -68,9 +68,9 @@ public class UserController {
                                          @AuthenticationPrincipal UserResult userResult) throws Exception {
 
         userService.updateUserLocation(locationRequest, userResult.getUser());
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Successfully updated user location")
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse.builder()
+                .message("Successfully updated user location")
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
 
@@ -83,9 +83,9 @@ public class UserController {
                                           @AuthenticationPrincipal UserResult userResult) throws Exception {
 
         userService.updateUserImages(imageRequest, userResult.getUser());
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Successfully updated user images")
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse.builder()
+                .message("Successfully updated user images")
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
 

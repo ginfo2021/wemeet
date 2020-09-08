@@ -66,14 +66,19 @@ public class JwtTokenHandler {
     }
 
     public UserResult getAuthentication(String token) {
-        UserResult userResult = new UserResult();
         User user = userService.findUserByEmail(getUsername(token));
 
-        TokenInfo tokenInfo = new TokenInfo(token, TokenType.BEARER);
+        return UserResult
+                .builder()
+                .tokenInfo(
+                        TokenInfo.builder()
+                                .accessToken(token)
+                                .tokenType(TokenType.BEARER)
+                                .build()
+                )
+                .user(user)
+                .build();
 
-        userResult.setUser(user);
-        userResult.setTokenInfo(tokenInfo);
-        return userResult;
     }
 
     private String getUsername(String token) {

@@ -78,7 +78,13 @@ public class UserService {
         user.setDeleted(true);
         createOrUpdateUser(user);
 
-        deletedUserService.createDeletedUser(new DeletedUser(user, user.getEmail(), deleteType, LocalDateTime.now()));
+        DeletedUser deletedUser = new DeletedUser();
+        deletedUser.setUser(user);
+        deletedUser.setUserEmail(user.getEmail());
+        deletedUser.setDeletedOn(LocalDateTime.now());
+        deletedUser.setDeleteType(deleteType);
+
+        deletedUserService.createDeletedUser(deletedUser);
     }
 
     public UserProfile getProfile(User user) throws Exception {
@@ -185,7 +191,10 @@ public class UserService {
 
             for (String otherImage : imageRequest.getAdditionalImages()) {
                 if (StringUtils.hasText(otherImage)) {
-                    userImageService.saveUserImage(new UserImage(otherImage, user));
+                    UserImage userImage = new UserImage();
+                    userImage.setUser(user);
+                    userImage.setImageUrl(otherImage);
+                    userImageService.saveUserImage(userImage);
                 }
             }
 

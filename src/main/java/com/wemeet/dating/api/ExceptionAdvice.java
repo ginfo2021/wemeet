@@ -175,17 +175,12 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
     private ApiResponse buildErrorResponse(String message, List<String> errorList, ResponseCode responseCode, Exception exception) {
 
-
-        ApiResponse apiResponse
-                = new ApiResponse.ResponseBuilder()
-                .setMessage(message)
-                .setResponseCode(responseCode)
-                .setLogId(UUID.randomUUID().toString())
-                .setErrors(errorList)
+        return ApiResponse.builder()
+                .message(message)
+                .responseCode(responseCode)
+                .logId(UUID.randomUUID().toString())
+                .errors(errorList)
                 .build();
-        return apiResponse;
-
-
     }
 
 

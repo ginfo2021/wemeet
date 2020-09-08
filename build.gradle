@@ -12,6 +12,7 @@ docker {
     copySpec.from("build").into("build")
     buildArgs(['JAR_FILE': "build/libs/wemeet.jar"])
     setDockerfile(file("Dockerfile"))
+    noCache true
 }
 
 group = 'com.wemeet'
@@ -47,8 +48,11 @@ dependencies {
     implementation "com.aventrix.jnanoid:jnanoid:2.0.0"
     implementation "org.slf4j:slf4j-api:1.7.25"
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.12'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
