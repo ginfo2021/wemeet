@@ -1,10 +1,10 @@
 package com.wemeet.dating.model.entity;
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
@@ -26,6 +26,8 @@ public class UserDevice {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
+    @CreationTimestamp
+    @JsonIgnore
     @Column(nullable = false)
     private LocalDateTime createdAt;
 

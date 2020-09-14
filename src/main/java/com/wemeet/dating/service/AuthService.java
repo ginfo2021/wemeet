@@ -1,8 +1,9 @@
 package com.wemeet.dating.service;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
-
 import com.wemeet.dating.config.security.JwtTokenHandler;
+import com.wemeet.dating.events.OnGeneratePasswordToken;
+import com.wemeet.dating.events.OnRegistrationCompleteEvent;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.EntityNotFoundException;
 import com.wemeet.dating.exception.InvalidCredentialException;
@@ -22,6 +23,7 @@ import com.wemeet.dating.model.user.UserResult;
 import com.wemeet.dating.model.user.UserSignup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,6 +49,7 @@ public class AuthService {
     private final UserPreferenceService userPreferenceService;
     private final ForgotPasswordService forgotPasswordService;
     private final UserDeviceService userDeviceService;
+    private final NotificationService notificationService;
     public static final char[] VERIFY_EMAIL_ALPHABET =
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
@@ -54,8 +57,14 @@ public class AuthService {
     private long passwordExpiryInHour;
 
     @Autowired
+    ApplicationEventPublisher eventPublisher;
+
+    @Autowired
     public AuthService(UserService userService, BCryptPasswordEncoder passwordEncoder, JwtTokenHandler tokenHandler,
-                       EmailVerificationService emailVerificationService, UserPreferenceService userPreferenceService, ForgotPasswordService forgotPasswordService, UserDeviceService userDeviceService) {
+                       EmailVerificationService emailVerificationService, UserPreferenceService userPreferenceService,
+                       ForgotPasswordService forgotPasswordService, UserDeviceService userDeviceService,
+                       NotificationService notificationService
+    ) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.tokenHandler = tokenHandler;
@@ -63,6 +72,7 @@ public class AuthService {
         this.userPreferenceService = userPreferenceService;
         this.forgotPasswordService = forgotPasswordService;
         this.userDeviceService = userDeviceService;
+        this.notificationService = notificationService;
     }
 
     public UserResult login(UserLogin userLogin) throws InvalidCredentialException {
@@ -114,10 +124,12 @@ public class AuthService {
         EmailVerification emailVerification = new EmailVerification();
 
         emailVerification.setUserEmail(userSignup.getEmail());
-        emailVerification.setId(Long.valueOf(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8)));
+        emailVerification.setToken(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8));
         emailVerification.setActive(true);
 
         emailVerificationService.saveEmail(emailVerification);
+        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(emailVerification));
+
         userPreferenceService.createBasePreferenceForUser(newUser, userSignup);
         if (StringUtils.hasText(userSignup.getDeviceId())) {
             UserDevice userDevice = new UserDevice();
@@ -180,6 +192,8 @@ public class AuthService {
         forgotPasswordEntity.setExpiresAt(LocalDateTime.now().plusHours(passwordExpiryInHour));
 
         forgotPasswordService.saveEntity(forgotPasswordEntity);
+        eventPublisher.publishEvent(new OnGeneratePasswordToken(forgotPasswordEntity));
+
 
     }
 
