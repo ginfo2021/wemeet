@@ -11,5 +11,4 @@ public class ApiResponse {
     private ResponseCode responseCode;
     private List<String> errors;
     private String logId;
-
 }

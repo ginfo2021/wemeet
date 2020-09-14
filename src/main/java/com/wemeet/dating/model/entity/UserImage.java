@@ -1,6 +1,8 @@
 package com.wemeet.dating.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -26,6 +28,8 @@ public class UserImage {
         @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
         private User user;
 
+        @CreationTimestamp
+        @JsonIgnore
         @Column(nullable = false)
         private LocalDateTime createdAt;
 
