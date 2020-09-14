@@ -21,6 +21,7 @@ public class UserSignup {
     private String password;
     @NotNull
     private Date dateOfBirth;
+    @NotBlank
     private String phone;
     private String deviceId;
     private Double longitude;

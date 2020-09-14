@@ -23,6 +23,7 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
+    @JsonIgnore
     private String userName;
 
     private String profileImage;
@@ -219,10 +220,6 @@ public class User {
 
     public void setLastUpdated(Date lastUpdated) {
         this.lastUpdated = lastUpdated;
-    }
-
-    public String getName() {
-        return firstName + "." + lastName;
     }
 
 

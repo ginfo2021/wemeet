@@ -101,7 +101,7 @@ public class AuthController {
 
     @PostMapping(value = "/accounts/reset-password",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse resetPassword(@RequestBody ResetPasswordRequest resetPassword) throws Exception {
+    public ApiResponse resetPassword(@RequestBody @Valid ResetPasswordRequest resetPassword) throws Exception {
         authService.resetPassword(resetPassword);
         return new ApiResponse.ResponseBuilder()
                 .setMessage("Password Successfully Reset")
@@ -112,7 +112,7 @@ public class AuthController {
 
     @PostMapping(value = "/change-password",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse changePassword(@RequestBody ChangePasswordRequest changePassword, @AuthenticationPrincipal UserResult userResult) throws Exception {
+    public ApiResponse changePassword(@RequestBody @Valid ChangePasswordRequest changePassword, @AuthenticationPrincipal UserResult userResult) throws Exception {
         authService.changePassword(changePassword, userResult.getUser());
         return new ApiResponse.ResponseBuilder()
                 .setMessage("Password Successfully Changed")
