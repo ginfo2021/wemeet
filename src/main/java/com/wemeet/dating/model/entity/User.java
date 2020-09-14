@@ -78,8 +78,5 @@ public class User {
     @Column(nullable = false)
     private Date lastUpdated;
 
-    public String getName(){
-        return (this.firstName + "." + this.lastName).trim();
-    }
 
 }

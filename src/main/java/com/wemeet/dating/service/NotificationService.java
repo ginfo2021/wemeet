@@ -4,6 +4,8 @@ import com.wemeet.dating.events.OnGeneratePasswordToken;
 import com.wemeet.dating.events.OnRegistrationCompleteEvent;
 import com.wemeet.dating.model.entity.EmailVerification;
 import com.wemeet.dating.model.entity.ForgotPassword;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
@@ -18,6 +20,7 @@ public class NotificationService {
 
     @Value("${mail.default.sender}")
     private String sender;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @EventListener
     public void confirmRegistration(OnRegistrationCompleteEvent event) {
@@ -34,7 +37,7 @@ public class NotificationService {
            simpleMailMessage.setText(message);
            this.mailSender.send(simpleMailMessage);
        }catch(Exception exception){
-           exception.toString();
+           logger.error("Unable to send registration email", exception);
        }
 
     }
@@ -54,7 +57,7 @@ public class NotificationService {
             simpleMailMessage.setText(message);
             this.mailSender.send(simpleMailMessage);
         }catch(Exception exception){
-            exception.toString();
+            logger.error("Unable to send reset password email", exception);
         }
 
     }

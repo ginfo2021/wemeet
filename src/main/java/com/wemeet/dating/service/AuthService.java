@@ -127,7 +127,7 @@ public class AuthService {
         emailVerification.setToken(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8));
         emailVerification.setActive(true);
 
-        emailVerificationService.saveEmail(emailVerification);
+        emailVerification = emailVerificationService.saveEmail(emailVerification);
         eventPublisher.publishEvent(new OnRegistrationCompleteEvent(emailVerification));
 
         userPreferenceService.createBasePreferenceForUser(newUser, userSignup);
