@@ -76,7 +76,6 @@ public class AuthenticationFilter extends GenericFilterBean {
 
     }
 
-
     private Authentication getAuthentication(HttpServletRequest request) {
         Authentication auth = null;
         String accessToken = tokenHandler.resolveToken(request);

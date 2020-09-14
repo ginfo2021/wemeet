@@ -3,10 +3,10 @@ version: 0.2
 env:
   variables:
     JAVA_VERSION: "8"
-#    JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
-#    JDK_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
-#    JRE_HOME: "/usr/lib/jvm/java-8-openjdk-amd64/jre"
-#    GRADLE_VERSION: "2.7"
+    JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
+    JDK_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
+    JRE_HOME: "/usr/lib/jvm/java-8-openjdk-amd64/jre"
+    GRADLE_VERSION: "6.4.1"
     AWS_ACCOUNT_ID: "542764922704"
     IMAGE_REPO_NAME: "wemeetbackend"
     IMAGE_TAG: "latest"

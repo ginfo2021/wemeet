@@ -6,6 +6,7 @@ import com.wemeet.dating.config.security.JwtTokenHandler;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.EntityNotFoundException;
 import com.wemeet.dating.exception.InvalidCredentialException;
+import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.TokenInfo;
 import com.wemeet.dating.model.entity.EmailVerification;
 import com.wemeet.dating.model.entity.ForgotPassword;
@@ -19,8 +20,6 @@ import com.wemeet.dating.model.request.ResetPasswordRequest;
 import com.wemeet.dating.model.user.UserLogin;
 import com.wemeet.dating.model.user.UserResult;
 import com.wemeet.dating.model.user.UserSignup;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
@@ -51,8 +50,6 @@ public class AuthService {
     public static final char[] VERIFY_EMAIL_ALPHABET =
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     @Value("${forgot.password.token.expire.hour}")
     private long passwordExpiryInHour;
 
@@ -69,8 +66,7 @@ public class AuthService {
     }
 
     public UserResult login(UserLogin userLogin) throws InvalidCredentialException {
-        UserResult userResult = new UserResult();
-        User existingUser = null;
+        User existingUser;
 
         existingUser = userService.findUserByEmail(userLogin.getEmail());
 
@@ -83,23 +79,30 @@ public class AuthService {
         }
 
         String accessToken = tokenHandler.createToken(existingUser, new ArrayList<>());
-        TokenInfo tokenInfo = new TokenInfo(accessToken, TokenType.BEARER);
 
         if (StringUtils.hasText(userLogin.getDeviceId())) {
-            UserDevice userDevice = new UserDevice(userLogin.getDeviceId(), existingUser);
+            UserDevice userDevice = new UserDevice();
+            userDevice.setDeviceId(userLogin.getDeviceId());
+            userDevice.setUser(existingUser);
             userDeviceService.saveUserDevice(userDevice);
         }
         userPreferenceService.updateUserLocation(existingUser, userLogin);
 
-        userResult.setUser(existingUser);
-        userResult.setTokenInfo(tokenInfo);
-
-        return userResult;
+        return UserResult
+                .builder()
+                .tokenInfo(
+                        TokenInfo
+                                .builder()
+                                .accessToken(accessToken)
+                                .tokenType(TokenType.BEARER)
+                                .build()
+                )
+                .user(existingUser)
+                .build();
     }
 
     @Transactional
     public UserResult signUp(UserSignup userSignup) throws Exception {
-        UserResult userResult = new UserResult();
         User newUser = userService.findUserByEmail(userSignup.getEmail());
         if (newUser != null) {
             throw new DuplicateKeyException("This user has already signed up, go to login");
@@ -107,26 +110,39 @@ public class AuthService {
         newUser = userService.createOrUpdateUser(buildUserFromSignUp(userSignup));
 
         String accessToken = tokenHandler.createToken(newUser, new ArrayList<>());
-        TokenInfo tokenInfo = new TokenInfo(accessToken, TokenType.BEARER);
 
-        EmailVerification emailVerification = new EmailVerification(userSignup.getEmail(),
-                NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8), true);
+        EmailVerification emailVerification = new EmailVerification();
+
+        emailVerification.setUserEmail(userSignup.getEmail());
+        emailVerification.setId(Long.valueOf(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8)));
+        emailVerification.setActive(true);
 
         emailVerificationService.saveEmail(emailVerification);
         userPreferenceService.createBasePreferenceForUser(newUser, userSignup);
         if (StringUtils.hasText(userSignup.getDeviceId())) {
-            UserDevice userDevice = new UserDevice(userSignup.getDeviceId(), newUser);
+            UserDevice userDevice = new UserDevice();
+            userDevice.setDeviceId(userSignup.getDeviceId());
+            userDevice.setUser(newUser);
             userDeviceService.saveUserDevice(userDevice);
         }
-        userResult.setUser(newUser);
-        userResult.setTokenInfo(tokenInfo);
-        return userResult;
+
+        return UserResult.builder()
+                .tokenInfo(
+                        TokenInfo
+                                .builder()
+                                .accessToken(accessToken)
+                                .tokenType(TokenType.BEARER)
+                                .build()
+                )
+                .user(newUser)
+                .build();
     }
 
     private User buildUserFromSignUp(UserSignup userSignup) throws BadRequestException {
         User newUser = new User();
         newUser.setFirstName(userSignup.getFirstName());
         newUser.setLastName(userSignup.getLastName());
+        newUser.setUserName(userSignup.getUserName());
         newUser.setEmail(userSignup.getEmail());
         newUser.setPhone(userSignup.getPhone());
         newUser.setActive(false);
@@ -152,17 +168,19 @@ public class AuthService {
     }
 
 
-    public ForgotPassword generatePasswordToken(String email) throws EntityNotFoundException {
+    public void generatePasswordToken(String email) throws EntityNotFoundException {
         User user = userService.findUserByEmail(email);
         if (user == null) {
             throw new EntityNotFoundException("User Email not Found");
         }
-        ForgotPassword forgotPasswordEntity = new ForgotPassword(true,
-                NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, DEFAULT_ALPHABET, 15), user
-                , LocalDateTime.now().plusHours(passwordExpiryInHour));
+        ForgotPassword forgotPasswordEntity = new ForgotPassword();
+        forgotPasswordEntity.setActive(true);
+        forgotPasswordEntity.setId(Long.valueOf(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, DEFAULT_ALPHABET, 15)));
+        forgotPasswordEntity.setUser(user);
+        forgotPasswordEntity.setExpiresAt(LocalDateTime.now().plusHours(passwordExpiryInHour));
+
         forgotPasswordService.saveEntity(forgotPasswordEntity);
 
-        return forgotPasswordEntity;
     }
 
     public boolean verifyForgotPasswordToken(String token, String email) {
@@ -182,10 +200,7 @@ public class AuthService {
             return false;
         }
 
-        if (!forgotPassword.getUser().getId().equals(user.getId())) {
-            return false;
-        }
-        return true;
+        return forgotPassword.getUser().getId().equals(user.getId());
     }
 
     public void resetPassword(ResetPasswordRequest resetPassword) throws BadRequestException {
@@ -211,9 +226,9 @@ public class AuthService {
     }
 
 
-    public void changePassword(ChangePasswordRequest changePassword, User user) throws BadRequestException {
+    public void changePassword(ChangePasswordRequest changePassword, User user) throws BadRequestException, InvalidJwtAuthenticationException {
         if (user == null) {
-            throw new BadRequestException("User does not exist");
+            throw new InvalidJwtAuthenticationException("User with token does not exist");
         }
 
 

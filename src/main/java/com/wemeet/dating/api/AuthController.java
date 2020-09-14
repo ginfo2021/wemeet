@@ -37,9 +37,10 @@ public class AuthController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse emailVerification(@NotBlank @RequestParam(name = "token") String token) throws Exception {
         authService.verifyEmail(token);
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Successfully Verified Email")
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse
+                .builder()
+                .message("Successfully Verified Email")
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
 
@@ -48,10 +49,11 @@ public class AuthController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse signUp(@Valid @RequestBody UserSignup userSignup) throws Exception {
 
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("User Signed Up Successfully")
-                .setData(authService.signUp(userSignup))
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse
+                .builder()
+                .message("User Signed Up Successfully")
+                .data(authService.signUp(userSignup))
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
 
     }
@@ -61,20 +63,21 @@ public class AuthController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse login(@Valid @RequestBody UserLogin login) throws InvalidCredentialException {
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Login Successful")
-                .setData(authService.login(login))
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse.builder()
+                .message("Login Successful")
+                .data(authService.login(login))
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse getUser(@AuthenticationPrincipal UserResult userResult) {
 
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Fetched User successfully")
-                .setData(userResult)
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse
+                .builder()
+                .message("Fetched User successfully")
+                .data(userResult)
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
 
@@ -83,19 +86,21 @@ public class AuthController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse forgotPassword(@RequestParam String email) throws Exception {
         authService.generatePasswordToken(email);
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Please check your email to reset password")
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse
+                .builder()
+                .message("Please check your email to reset password")
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
 
     @GetMapping(value = "/accounts/verify-password-token",
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse passwordTokenVerification(@RequestParam String token, @RequestParam String email) {
-        return new ApiResponse.ResponseBuilder()
-                .setData(authService.verifyForgotPasswordToken(token, email))
-                .setMessage("Verification completed")
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse
+                .builder()
+                .data(authService.verifyForgotPasswordToken(token, email))
+                .message("Verification completed")
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
 
@@ -103,9 +108,10 @@ public class AuthController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse resetPassword(@RequestBody @Valid ResetPasswordRequest resetPassword) throws Exception {
         authService.resetPassword(resetPassword);
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Password Successfully Reset")
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse
+                .builder()
+                .message("Password Successfully Reset")
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
 
     }
@@ -114,9 +120,10 @@ public class AuthController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse changePassword(@RequestBody @Valid ChangePasswordRequest changePassword, @AuthenticationPrincipal UserResult userResult) throws Exception {
         authService.changePassword(changePassword, userResult.getUser());
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Password Successfully Changed")
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse
+                .builder()
+                .message("Password Successfully Changed")
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
 
     }
@@ -126,9 +133,10 @@ public class AuthController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse deleteUser(@AuthenticationPrincipal UserResult userResult) throws Exception {
         authService.deleteUser( userResult.getUser());
-        return new ApiResponse.ResponseBuilder()
-                .setMessage("Successfully deleted account")
-                .setResponseCode(ResponseCode.SUCCESS)
+        return ApiResponse
+                .builder()
+                .message("Successfully deleted account")
+                .responseCode(ResponseCode.SUCCESS)
                 .build();
 
     }

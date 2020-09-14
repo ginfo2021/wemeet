@@ -2,11 +2,14 @@ package com.wemeet.dating.service;
 
 
 import com.wemeet.dating.dao.UserRepository;
-import com.wemeet.dating.exception.BadRequestException;
+import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.entity.DeletedUser;
 import com.wemeet.dating.model.entity.User;
+import com.wemeet.dating.model.entity.UserImage;
 import com.wemeet.dating.model.entity.UserPreference;
 import com.wemeet.dating.model.enums.DeleteType;
+import com.wemeet.dating.model.request.UserImageRequest;
+import com.wemeet.dating.model.request.UserLocationRequest;
 import com.wemeet.dating.model.request.UserProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,14 +29,16 @@ public class UserService {
     private final UserPreferenceService userPreferenceService;
     private final UserRepository userRepository;
     private final DeletedUserService deletedUserService;
+    private final UserImageService userImageService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    public UserService(UserPreferenceService userPreferenceService, UserRepository userRepository, DeletedUserService deletedUserService) {
+    public UserService(UserPreferenceService userPreferenceService, UserRepository userRepository, DeletedUserService deletedUserService, UserImageService userImageService) {
         this.userPreferenceService = userPreferenceService;
         this.userRepository = userRepository;
         this.deletedUserService = deletedUserService;
+        this.userImageService = userImageService;
     }
 
     public User findUserByEmail(String email) {
@@ -73,43 +78,55 @@ public class UserService {
         user.setDeleted(true);
         createOrUpdateUser(user);
 
-        deletedUserService.createDeletedUser(new DeletedUser(user, user.getEmail(), deleteType, LocalDateTime.now()));
+        DeletedUser deletedUser = new DeletedUser();
+        deletedUser.setUser(user);
+        deletedUser.setUserEmail(user.getEmail());
+        deletedUser.setDeletedOn(LocalDateTime.now());
+        deletedUser.setDeleteType(deleteType);
+
+        deletedUserService.createDeletedUser(deletedUser);
     }
 
-    public UserProfile getProfile(Long id) throws BadRequestException {
+    public UserProfile getProfile(User user) throws Exception {
         UserProfile userProfile = new UserProfile();
-        User user = findById(id);
         if (user == null || user.getId() <= 0) {
-            throw new BadRequestException("User does Not exist");
+            throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
-        UserPreference userPreference = userPreferenceService.findUserPreference(id);
+        UserPreference userPreference = userPreferenceService.findUserPreference(user.getId());
 
         BeanUtils.copyProperties(user, userProfile);
         BeanUtils.copyProperties(userPreference, userProfile);
+
+        userProfile.setAdditionalImages(userImageService.findTop5ByUser(user)
+                .stream()
+                .map(UserImage::getImageUrl)
+                .collect(Collectors.toList()));
 
         return userProfile;
     }
 
     @Transactional
-    public UserProfile updateUserProfile(UserProfile userProfile) throws BadRequestException {
+    public UserProfile updateUserProfile(UserProfile userProfile, User user) throws Exception {
 
         createOrUpdateUser(buildUserFromProfile(userProfile));
         userPreferenceService.createOrUpdatePreference(buildPreferenceFromProfile(userProfile));
 
-        return getProfile(userProfile.getId());
+
+        return getProfile(user);
     }
 
 
-    private User buildUserFromProfile(UserProfile userProfile) throws BadRequestException {
+    private User buildUserFromProfile(UserProfile userProfile) throws Exception {
         User user = findById(userProfile.getId());
         if (user == null || user.getId() <= 0) {
-            throw new BadRequestException("User does Not exist");
+            throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
 
 
         if (userProfile.getGender() != null) {
             user.setGender(userProfile.getGender());
         }
+
 
         return user;
     }
@@ -144,4 +161,43 @@ public class UserService {
         return userPreference;
     }
 
+    public void updateUserLocation(UserLocationRequest locationRequest, User user) throws Exception {
+        if (user == null || user.getId() <= 0) {
+            throw new InvalidJwtAuthenticationException("User with token does Not exist");
+        }
+        UserPreference userPreference = userPreferenceService.findUserPreference(user.getId());
+
+        if (locationRequest.getLongitude() != null) {
+            userPreference.setLongitude(locationRequest.getLongitude());
+        }
+
+        if (locationRequest.getLatitude() != null) {
+            userPreference.setLatitude(locationRequest.getLatitude());
+        }
+        userPreferenceService.createOrUpdatePreference(userPreference);
+    }
+
+    public void updateUserImages(UserImageRequest imageRequest, User user) throws Exception {
+        if (user == null || user.getId() <= 0) {
+            throw new InvalidJwtAuthenticationException("User with token does Not exist");
+        }
+
+        if (StringUtils.hasText(imageRequest.getProfileImage())) {
+            user.setProfileImage(imageRequest.getProfileImage());
+        }
+        createOrUpdateUser(user);
+
+        if (imageRequest.getAdditionalImages() != null && !imageRequest.getAdditionalImages().isEmpty()) {
+
+            for (String otherImage : imageRequest.getAdditionalImages()) {
+                if (StringUtils.hasText(otherImage)) {
+                    UserImage userImage = new UserImage();
+                    userImage.setUser(user);
+                    userImage.setImageUrl(otherImage);
+                    userImageService.saveUserImage(userImage);
+                }
+            }
+
+        }
+    }
 }
