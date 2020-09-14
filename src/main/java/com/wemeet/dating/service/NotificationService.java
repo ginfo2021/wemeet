@@ -21,31 +21,41 @@ public class NotificationService {
 
     @EventListener
     public void confirmRegistration(OnRegistrationCompleteEvent event) {
-        EmailVerification emailVerification = event.getEmailVerification();
-        String subject = "Registration Confirmation";
+       try {
+           EmailVerification emailVerification = event.getEmailVerification();
+           String subject = "Registration Confirmation";
 
-        String message = "copy token" + " " + emailVerification.getToken();
-        //move token creation here
-        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
-        simpleMailMessage.setFrom(sender);
-        simpleMailMessage.setTo(emailVerification.getUserEmail());
-        simpleMailMessage.setSubject(subject);
-        simpleMailMessage.setText(message);
-        this.mailSender.send(simpleMailMessage);
+           String message = "copy token" + " " + emailVerification.getToken();
+           //move token creation here
+           SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+           simpleMailMessage.setFrom(sender);
+           simpleMailMessage.setTo(emailVerification.getUserEmail());
+           simpleMailMessage.setSubject(subject);
+           simpleMailMessage.setText(message);
+           this.mailSender.send(simpleMailMessage);
+       }catch(Exception exception){
+           exception.toString();
+       }
+
     }
 
     @EventListener
     public void resetPassword(OnGeneratePasswordToken event) {
-        ForgotPassword forgotPassword = event.getForgotPassword();
-        String subject = "Password Reset Confirmation";
+        try {
+            ForgotPassword forgotPassword = event.getForgotPassword();
+            String subject = "Password Reset Confirmation";
 
-        String message = "copy token" + " " + forgotPassword.getToken();
-        //move token creation here
-        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
-        simpleMailMessage.setFrom(sender);
-        simpleMailMessage.setTo(forgotPassword.getUser().getEmail());
-        simpleMailMessage.setSubject(subject);
-        simpleMailMessage.setText(message);
-        this.mailSender.send(simpleMailMessage);
+            String message = "copy token" + " " + forgotPassword.getToken();
+            //move token creation here
+            SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+            simpleMailMessage.setFrom(sender);
+            simpleMailMessage.setTo(forgotPassword.getUser().getEmail());
+            simpleMailMessage.setSubject(subject);
+            simpleMailMessage.setText(message);
+            this.mailSender.send(simpleMailMessage);
+        }catch(Exception exception){
+            exception.toString();
+        }
+
     }
 }
