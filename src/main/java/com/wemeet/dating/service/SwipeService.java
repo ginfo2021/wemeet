@@ -7,13 +7,21 @@ import com.wemeet.dating.model.entity.Swipe;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.enums.SwipeType;
 import com.wemeet.dating.model.request.SwipeRequest;
+import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.SwipeResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class SwipeService {
@@ -66,5 +74,23 @@ public class SwipeService {
 
     public Swipe findSwipe(Long id) {
         return swipeRepository.findById(id).orElse(null);
+    }
+
+    public List<UserProfile> getUserMatches(User user, int pageNum, int pageSize) throws Exception {
+        if (user == null || user.getId() <= 0) {
+            throw new InvalidJwtAuthenticationException("User with token does Not exist");
+        }
+        List<UserProfile> userProfiles = new ArrayList<>();
+        Page<BigInteger> matchlist = swipeRepository.findSwipersByType(user.getId(), SwipeType.LIKE.getName(), PageRequest.of(pageNum, pageSize));
+
+
+        matchlist.toList().forEach(a -> {
+            try {
+                userProfiles.add(userService.getProfile(a.longValue()));
+            } catch (Exception e) {
+                logger.error("Error fetching user profile for user id: " + a, e);
+            }
+        });
+        return userProfiles;
     }
 }

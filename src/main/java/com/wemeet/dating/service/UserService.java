@@ -87,6 +87,10 @@ public class UserService {
         deletedUserService.createDeletedUser(deletedUser);
     }
 
+    public UserProfile getProfile(Long userId) throws Exception {
+        return getProfile(findById(userId));
+    }
+
     public UserProfile getProfile(User user) throws Exception {
         UserProfile userProfile = new UserProfile();
         if (user == null || user.getId() <= 0) {
