@@ -1,9 +1,11 @@
 package com.wemeet.dating.model.response;
 
 import lombok.Builder;
+import lombok.Data;
 
 import java.util.List;
 
+@Data
 @Builder
 public class ApiResponse {
     private String message;
@@ -11,5 +13,4 @@ public class ApiResponse {
     private ResponseCode responseCode;
     private List<String> errors;
     private String logId;
-
 }

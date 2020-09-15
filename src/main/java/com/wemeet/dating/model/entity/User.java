@@ -25,7 +25,7 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
-    @Column(nullable = false)
+    @JsonIgnore
     private String userName;
 
     private String profileImage;
@@ -78,8 +78,5 @@ public class User {
     @Column(nullable = false)
     private Date lastUpdated;
 
-    public String getName(){
-        return (this.firstName + "." + this.lastName).trim();
-    }
 
 }

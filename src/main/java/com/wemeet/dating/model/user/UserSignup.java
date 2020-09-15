@@ -30,6 +30,7 @@ public class UserSignup {
 
     @NotNull
     private Date dateOfBirth;
+    @NotBlank
     private String phone;
     private String deviceId;
     private Double longitude;
