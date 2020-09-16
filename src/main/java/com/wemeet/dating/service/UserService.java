@@ -2,6 +2,7 @@ package com.wemeet.dating.service;
 
 
 import com.wemeet.dating.dao.UserRepository;
+import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.entity.DeletedUser;
 import com.wemeet.dating.model.entity.User;
@@ -15,11 +16,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,6 +92,11 @@ public class UserService {
         deletedUserService.createDeletedUser(deletedUser);
     }
 
+
+    public UserProfile getProfile(Long userId) throws Exception {
+        return getProfile(findById(userId));
+    }
+
     public UserProfile getProfile(User user) throws Exception {
         UserProfile userProfile = new UserProfile();
         if (user == null || user.getId() <= 0) {
@@ -96,6 +106,10 @@ public class UserService {
 
         BeanUtils.copyProperties(user, userProfile);
         BeanUtils.copyProperties(userPreference, userProfile);
+        userProfile.setAge(Period.between(user.getDateOfBirth().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate(), LocalDate.now()).getYears()
+        );
 
         userProfile.setAdditionalImages(userImageService.findTop5ByUser(user)
                 .stream()
@@ -132,7 +146,7 @@ public class UserService {
     }
 
 
-    private UserPreference buildPreferenceFromProfile(UserProfile userProfile) {
+    private UserPreference buildPreferenceFromProfile(UserProfile userProfile) throws BadRequestException {
         UserPreference userPreference = userPreferenceService.findUserPreference(userProfile.getId());
         if (StringUtils.hasText(userProfile.getBio())) {
             userPreference.setBio(userProfile.getBio());
@@ -149,6 +163,11 @@ public class UserService {
         if (userProfile.getMaxAge() != null) {
             userPreference.setMaxAge(userProfile.getMaxAge());
         }
+
+        if (userProfile.getMaxAge() != null && userProfile.getMinAge() != null && userProfile.getMaxAge() < userProfile.getMinAge()) {
+            throw new BadRequestException(" max age must be greater than min age");
+        }
+
 
         if (userProfile.getSwipeRadius() != null) {
             userPreference.setSwipeRadius(userProfile.getSwipeRadius());
