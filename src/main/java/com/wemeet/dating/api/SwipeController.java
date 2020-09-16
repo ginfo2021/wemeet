@@ -58,5 +58,18 @@ public class SwipeController {
                 .build();
     }
 
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
+    @GetMapping(value = "/suggest", produces = MediaType.APPLICATION_JSON_VALUE)
+
+    public ApiResponse getSwipeSuggestion(@AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Fetched swipe suggestions successfully")
+                .data(swipeService.getSwipeSuggestion(userResult.getUser()))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
 
 }
