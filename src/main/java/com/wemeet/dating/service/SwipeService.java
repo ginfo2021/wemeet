@@ -116,7 +116,7 @@ public class SwipeService {
     }
 
 
-    public List<UserProfile> getSwipeSuggestion(User user) throws Exception {
+    public List<UserProfile> getSwipeSuggestion(User user, boolean filterByDistance) throws Exception {
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
@@ -125,13 +125,28 @@ public class SwipeService {
         List<BigInteger> swipeSuggestions =
                 swipeRepository.findSwipeSuggestions(user.getId(), userPreference.getGenderPreference().stream().map(Gender::getName).collect(Collectors.toList()), wemeetSwipeSuggestionNumber);
 
+        List<UserProfile> finalUserProfiles = userProfiles;
         swipeSuggestions.forEach(a -> {
             try {
-                userProfiles.add(getProfileWithUserDistance(a.longValue(), userPreference));
+                finalUserProfiles.add(getProfileWithUserDistance(a.longValue(), userPreference));
             } catch (Exception e) {
                 logger.error("Error fetching user profile for user id: " + a, e);
             }
         });
+
+        //Filter by age
+        userProfiles = finalUserProfiles.stream()
+                .filter(suggestion -> userPreference.getMinAge() <= suggestion.getAge())
+                .filter(suggestion -> userPreference.getMaxAge() >= suggestion.getAge())
+                .collect(Collectors.toList());
+        //Filter by distance/location
+        if (filterByDistance) {
+            userProfiles = userProfiles.stream()
+                    .filter(suggestion -> (suggestion.getDistanceInKm() == null || suggestion.getDistanceInKm() <= 0 || userPreference.getSwipeRadius() >= suggestion.getDistanceInKm()))
+                    .collect(Collectors.toList());
+        }
+
+
         return userProfiles;
     }
 

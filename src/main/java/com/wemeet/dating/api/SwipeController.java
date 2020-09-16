@@ -62,11 +62,12 @@ public class SwipeController {
     @ActiveUser(message = "User not active")
     @GetMapping(value = "/suggest", produces = MediaType.APPLICATION_JSON_VALUE)
 
-    public ApiResponse getSwipeSuggestion(@AuthenticationPrincipal UserResult userResult) throws Exception {
+    public ApiResponse getSwipeSuggestion(@AuthenticationPrincipal UserResult userResult,
+                                          @RequestParam(defaultValue = "false") boolean locationFilter) throws Exception {
 
         return ApiResponse.builder()
                 .message("Fetched swipe suggestions successfully")
-                .data(swipeService.getSwipeSuggestion(userResult.getUser()))
+                .data(swipeService.getSwipeSuggestion(userResult.getUser(), locationFilter))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
