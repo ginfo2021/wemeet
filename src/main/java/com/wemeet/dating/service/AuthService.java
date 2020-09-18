@@ -187,7 +187,7 @@ public class AuthService {
         }
         ForgotPassword forgotPasswordEntity = new ForgotPassword();
         forgotPasswordEntity.setActive(true);
-        forgotPasswordEntity.setId(Long.valueOf(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, DEFAULT_ALPHABET, 15)));
+        forgotPasswordEntity.setToken(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, DEFAULT_ALPHABET, 15));
         forgotPasswordEntity.setUser(user);
         forgotPasswordEntity.setExpiresAt(LocalDateTime.now().plusHours(passwordExpiryInHour));
 
@@ -267,5 +267,21 @@ public class AuthService {
     public void deleteUser(User user) {
 
         userService.deleteUser(user, DeleteType.SELF);
+    }
+
+    public EmailVerification getEmailVerification(User user) throws Exception {
+        if (user == null) {
+            throw new InvalidJwtAuthenticationException("User with token not Found");
+        }
+
+        return emailVerificationService.getByEmail(user.getEmail());
+    }
+
+    public ForgotPassword getForgotPasswordToken(User user) throws Exception {
+        if (user == null) {
+            throw new InvalidJwtAuthenticationException("User with token not Found");
+        }
+
+        return forgotPasswordService.getByUser(user);
     }
 }
