@@ -49,4 +49,8 @@ public class EmailVerificationService {
 
 
     }
+
+    public EmailVerification getByEmail(String email) {
+        return emailVerificationRepository.findTop1ByUserEmailOrderByIdDesc(email);
+    }
 }

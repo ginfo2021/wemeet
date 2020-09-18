@@ -11,6 +11,7 @@ import com.wemeet.dating.model.user.UserResult;
 import com.wemeet.dating.model.user.UserSignup;
 import com.wemeet.dating.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -77,6 +78,30 @@ public class AuthController {
                 .builder()
                 .message("Fetched User successfully")
                 .data(userResult)
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @Profile(value = {"!production"})
+    @GetMapping(value = "/emailverification",produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse getEmailVerificationToken(@AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        return ApiResponse
+                .builder()
+                .message("Fetched email verification successfully")
+                .data(authService.getEmailVerification(userResult.getUser()))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @Profile(value = {"!production"})
+    @GetMapping(value = "/passwordtoken",produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse getForgotPasswordToken(@AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        return ApiResponse
+                .builder()
+                .message("Fetched password token successfully")
+                .data(authService.getForgotPasswordToken(userResult.getUser()))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
