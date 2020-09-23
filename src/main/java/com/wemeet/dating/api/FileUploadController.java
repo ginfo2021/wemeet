@@ -1,5 +1,6 @@
 package com.wemeet.dating.api;
 
+import com.wemeet.dating.model.enums.FileType;
 import com.wemeet.dating.model.request.FileUploadRequest;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ProfilePhotoResponse;
@@ -33,12 +34,12 @@ public class FileUploadController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse uploadProfilePhoto(
             @AuthenticationPrincipal UserResult userResult,
-            @RequestParam(value = "imageType") String imageType,
+            @RequestParam(value = "imageType") FileType fileType,
             MultipartFile file
     ) throws Exception{
         FileUploadRequest fileUploadRequest = new FileUploadRequest();
         fileUploadRequest.setFile(file);
-        fileUploadRequest.setImageType(imageType);
+        fileUploadRequest.setFileType(fileType);
 
         ProfilePhotoResponse response = storageService.storeFiles(userResult, fileUploadRequest);
         return ApiResponse.builder()

@@ -1,5 +1,6 @@
 package com.wemeet.dating.service;
 
+import com.wemeet.dating.exception.InvalidFileTypeException;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.entity.UserImage;
 import com.wemeet.dating.model.request.FileUploadRequest;
@@ -28,18 +29,24 @@ public class StorageService {
 
     public ProfilePhotoResponse storeFiles(UserResult userResult, FileUploadRequest request) throws Exception {
 
+        if(request.getFile().isEmpty()){
+            throw new InvalidFileTypeException("Invalid file found");
+        }
+
         String imageUrl = s3Service.putObject(request.getFile().getInputStream());
 
         User user = userService.findById(userResult.getUser().getId());
 
-        if(request.getImageType().equals("PROFILE_IMAGE")){
+        if(request.getFileType().getName().equals("PROFILE_IMAGE")){
             user.setProfileImage(imageUrl);
             userService.createOrUpdateUser(user);
-        }else{
+        }else if(request.getFileType().getName().equals("ADDITIONAL_IMAGE")){
             UserImage userImage = new UserImage();
             userImage.setUser(user);
             userImage.setImageUrl(imageUrl);
             userImageService.saveUserImage(userImage);
+        }else {
+            return null;
         }
 
         return ProfilePhotoResponse
