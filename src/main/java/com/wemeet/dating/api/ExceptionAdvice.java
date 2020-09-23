@@ -132,6 +132,15 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(InvalidFileTypeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    protected ResponseEntity<Object> handleInvalidFileTypeException(InvalidFileTypeException ex) {
+        ex.printStackTrace();
+
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.ERROR, ex);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     protected ResponseEntity<Object> handleConstraintViolationExceptionException(ConstraintViolationException ex) {

@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
+import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.cloud.aws.mail.simplemail.SimpleEmailServiceMailSender;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +33,22 @@ public class AWSConfig {
     }
 
     @Bean
+    public AmazonS3 client(AWSCredentialsProvider credentialsProvider) {
+        return AmazonS3ClientBuilder
+                .standard()
+                .withRegion(Regions.EU_WEST_1)
+                .withCredentials(credentialsProvider)
+                .build();
+    }
+
+    @Bean
     public MailSender mailSender(AmazonSimpleEmailService ses) {
         return new SimpleEmailServiceMailSender(ses);
+    }
+
+
+    @Bean
+    public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {
+        return new SimpleStorageResourceLoader(client);
     }
 }
