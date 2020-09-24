@@ -41,7 +41,7 @@ public class FileUploadController {
         fileUploadRequest.setFile(file);
         fileUploadRequest.setFileType(fileType);
 
-        ProfilePhotoResponse response = storageService.storeFiles(userResult, fileUploadRequest);
+        ProfilePhotoResponse response = storageService.storeFiles(userResult.getUser(), fileUploadRequest);
         return ApiResponse.builder()
                 .message("File(s) Uploaded Successfully")
                 .data(response)
