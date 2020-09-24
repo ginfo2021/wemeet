@@ -76,6 +76,7 @@ public class SwipeService {
             Swipe counterSwipe = swipeRepository.findBySwiperAndSwipee(swipee, user);
             if (counterSwipe != null && counterSwipe.getType().equals(SwipeType.LIKE)) {
                 response.setMatch(true);
+                //TODO: SEND NOTIFICATION TO MATCHED USER(SWIPEE)
             }
         }
         response.setSwipe(swipe);
@@ -174,6 +175,23 @@ public class SwipeService {
         }
 
         return userProfile;
+    }
+
+
+    public boolean usersMatch(User firstUser, User secondUser){
+        boolean match = true;
+        Swipe oneLikes2 = swipeRepository.findBySwiperAndSwipee(firstUser, secondUser);
+        if (oneLikes2 == null || oneLikes2.getType() == null ||!oneLikes2.getType().equals(SwipeType.LIKE)) {
+            match = false;
+        }
+
+        Swipe twoLikes1 = swipeRepository.findBySwiperAndSwipee(secondUser, firstUser);
+        if (twoLikes1 == null || twoLikes1.getType() == null ||!twoLikes1.getType().equals(SwipeType.LIKE)) {
+            match = false;
+        }
+
+
+        return match;
     }
 
 }

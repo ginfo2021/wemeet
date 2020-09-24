@@ -1,6 +1,8 @@
 package com.wemeet.dating.service;
 
 import com.wemeet.dating.exception.InvalidFileTypeException;
+import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
+import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.request.FileUploadRequest;
 import com.wemeet.dating.model.response.ProfilePhotoResponse;
 import com.wemeet.dating.model.user.UserResult;
@@ -25,13 +27,16 @@ public class StorageService {
         this.userImageService = userImageService;
     }
 
-    public ProfilePhotoResponse storeFiles(UserResult userResult, FileUploadRequest request) throws Exception {
+    public ProfilePhotoResponse storeFiles(User user, FileUploadRequest request) throws Exception {
+        if (user == null || user.getId() <= 0) {
+            throw new InvalidJwtAuthenticationException("User with token does Not exist");
+        }
 
         if(request.getFile().isEmpty()){
             throw new InvalidFileTypeException("Invalid file found");
         }
 
-        String imageUrl = s3Service.putObject(request.getFile().getInputStream());
+        String imageUrl = s3Service.putObject(user, request);
 
         return ProfilePhotoResponse
                 .builder()
