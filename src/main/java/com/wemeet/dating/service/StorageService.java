@@ -5,7 +5,6 @@ import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.request.FileUploadRequest;
 import com.wemeet.dating.model.response.ProfilePhotoResponse;
-import com.wemeet.dating.model.user.UserResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +17,9 @@ public class StorageService {
 
     @Autowired
     public StorageService(
-            S3Service s3Service,
-            UserService userService,
-            UserImageService userImageService
+            S3Service s3Service
     ) {
         this.s3Service = s3Service;
-        this.userService = userService;
-        this.userImageService = userImageService;
     }
 
     public ProfilePhotoResponse storeFiles(User user, FileUploadRequest request) throws Exception {
