@@ -141,6 +141,15 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(PreferenceNotSetException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    protected ResponseEntity<Object> handlePreferenceNotSetExceptionException(PreferenceNotSetException ex) {
+        ex.printStackTrace();
+
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.PREFERENCE_NOT_SET, ex);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(InvalidFileTypeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     protected ResponseEntity<Object> handleInvalidFileTypeException(InvalidFileTypeException ex) {

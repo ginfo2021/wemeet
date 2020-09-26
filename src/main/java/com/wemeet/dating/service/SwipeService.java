@@ -3,6 +3,7 @@ package com.wemeet.dating.service;
 import com.wemeet.dating.dao.SwipeRepository;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
+import com.wemeet.dating.exception.PreferenceNotSetException;
 import com.wemeet.dating.model.entity.Swipe;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.entity.UserPreference;
@@ -123,6 +124,14 @@ public class SwipeService {
         }
         List<UserProfile> userProfiles = new ArrayList<>();
         UserPreference userPreference = userPreferenceService.findUserPreference(user.getId());
+
+        if (userPreference.getGenderPreference() == null
+                || userPreference.getGenderPreference().isEmpty()
+                || userPreference.getMinAge() == null
+                || userPreference.getMaxAge() == null) {
+            throw new PreferenceNotSetException("User has not set preferences, Update profile");
+        }
+
         List<BigInteger> swipeSuggestions =
                 swipeRepository.findSwipeSuggestions(user.getId(), userPreference.getGenderPreference().stream().map(Gender::getName).collect(Collectors.toList()), wemeetSwipeSuggestionNumber);
 
@@ -178,15 +187,15 @@ public class SwipeService {
     }
 
 
-    public boolean usersMatch(User firstUser, User secondUser){
+    public boolean usersMatch(User firstUser, User secondUser) {
         boolean match = true;
         Swipe oneLikes2 = swipeRepository.findBySwiperAndSwipee(firstUser, secondUser);
-        if (oneLikes2 == null || oneLikes2.getType() == null ||!oneLikes2.getType().equals(SwipeType.LIKE)) {
+        if (oneLikes2 == null || oneLikes2.getType() == null || !oneLikes2.getType().equals(SwipeType.LIKE)) {
             match = false;
         }
 
         Swipe twoLikes1 = swipeRepository.findBySwiperAndSwipee(secondUser, firstUser);
-        if (twoLikes1 == null || twoLikes1.getType() == null ||!twoLikes1.getType().equals(SwipeType.LIKE)) {
+        if (twoLikes1 == null || twoLikes1.getType() == null || !twoLikes1.getType().equals(SwipeType.LIKE)) {
             match = false;
         }
 
