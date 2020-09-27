@@ -26,6 +26,14 @@ public class UserDevice {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
+    @Column
+    @JsonIgnore
+    private String endpointArn;
+
+    @Column
+    @JsonIgnore
+    private String platform;
+
     @CreationTimestamp
     @JsonIgnore
     @Column(nullable = false)

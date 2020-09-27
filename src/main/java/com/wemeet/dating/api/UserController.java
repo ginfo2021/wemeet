@@ -1,13 +1,14 @@
 package com.wemeet.dating.api;
 
 
-import com.wemeet.dating.exception.BadRequestException;
+import com.wemeet.dating.model.request.NotificationRequest;
 import com.wemeet.dating.model.request.UserImageRequest;
 import com.wemeet.dating.model.request.UserLocationRequest;
 import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
+import com.wemeet.dating.service.PushNotificationService;
 import com.wemeet.dating.service.UserService;
 import com.wemeet.dating.util.validation.constraint.ActiveUser;
 import com.wemeet.dating.util.validation.constraint.NotSuspendedUser;
@@ -26,9 +27,12 @@ public class UserController {
 
     private final UserService userService;
 
+    private final PushNotificationService pushNotificationService;
+
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, PushNotificationService pushNotificationService) {
         this.userService = userService;
+        this.pushNotificationService = pushNotificationService;
     }
 
 
@@ -85,6 +89,22 @@ public class UserController {
         userService.updateUserImages(imageRequest, userResult.getUser());
         return ApiResponse.builder()
                 .message("Successfully updated user images")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
+    @PostMapping(value = "/publish",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse publish(@Valid @RequestBody NotificationRequest notificationRequest,
+                                        @AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Successfully published message")
+                .data(pushNotificationService.publishNotificationTOSQS(notificationRequest))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }

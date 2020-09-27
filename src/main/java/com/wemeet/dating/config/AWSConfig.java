@@ -10,11 +10,10 @@ import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import org.springframework.cloud.aws.mail.simplemail.SimpleEmailServiceMailSender;
 import org.springframework.cloud.aws.messaging.core.NotificationMessagingTemplate;
-import org.springframework.cloud.aws.messaging.core.QueueMessagingTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.mail.MailSender;
-
 
 
 @Configuration
@@ -28,14 +27,15 @@ public class AWSConfig {
     }
 
     @Bean
-    public AmazonSNS amazonSNSClientBuilder (AWSCredentialsProvider credentialsProvider){
+    public AmazonSNS amazonSNS (AWSCredentialsProvider credentialsProvider){
         return AmazonSNSClientBuilder.standard()
                 .withCredentials(credentialsProvider)
                 .withRegion(Regions.EU_WEST_1).build();
     }
 
     @Bean
-    public AmazonSQSAsync amazonSQSAsync (AWSCredentialsProvider credentialsProvider){
+    @Primary
+    public AmazonSQSAsync amazonSQS (AWSCredentialsProvider credentialsProvider){
         return AmazonSQSAsyncClientBuilder.standard()
                 .withCredentials(credentialsProvider)
                 .withRegion(Regions.EU_WEST_1).build();
@@ -48,13 +48,8 @@ public class AWSConfig {
     }
 
     @Bean
-    public NotificationMessagingTemplate notificationMessagingTemplate(AmazonSNS amazonSNS){
+    public NotificationMessagingTemplate notificationMessagingTemplate(
+            AmazonSNS amazonSNS) {
         return new NotificationMessagingTemplate(amazonSNS);
-    }
-
-    @Bean
-    public QueueMessagingTemplate queueMessagingTemplate(
-            AmazonSQSAsync amazonSQSAsync) {
-        return new QueueMessagingTemplate(amazonSQSAsync);
     }
 }

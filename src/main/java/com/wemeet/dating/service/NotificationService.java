@@ -1,15 +1,9 @@
 package com.wemeet.dating.service;
 
-import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sns.model.MessageAttributeValue;
-import com.amazonaws.services.sns.model.PublishRequest;
-import com.amazonaws.services.sns.model.PublishResult;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wemeet.dating.events.OnGeneratePasswordToken;
 import com.wemeet.dating.events.OnRegistrationCompleteEvent;
 import com.wemeet.dating.model.entity.EmailVerification;
 import com.wemeet.dating.model.entity.ForgotPassword;
-import com.wemeet.dating.model.request.NotificationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,23 +13,14 @@ import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Service
 public class NotificationService {
     @Autowired
     private MailSender mailSender;
 
-    @Autowired
-    private AmazonSNS amazonSNS;
-
-    @Value("${sns.topic.arn}")
-    private String snsTopicWemeetARN;
-
-
     @Value("${mail.default.sender}")
     private String sender;
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @EventListener
@@ -78,32 +63,8 @@ public class NotificationService {
 
     }
 
-    public void publishNotification(NotificationRequest notificationrequest)throws Exception {
-        try{
-            ObjectMapper mapper = new ObjectMapper();
-            String notificationMessage = mapper.writeValueAsString(notificationrequest);
-            MessageAttributeValue attributeValue = new MessageAttributeValue();
-            attributeValue.setDataType("String");
-            attributeValue.setStringValue(notificationrequest.getNotificationType());
-            Map<String, MessageAttributeValue> messageAttribute = new HashMap<String, MessageAttributeValue>();
-            messageAttribute.put("notification_type", attributeValue); //check this
-            String snsTopic = getTopicARN(snsTopicWemeetARN);
-            PublishRequest publishRequest = new PublishRequest(snsTopic, notificationMessage);
-            publishRequest.withMessageAttributes(messageAttribute);
-            PublishResult publishResult = this.amazonSNS.publish(publishRequest);
-            logger.info("MessageId - ", publishRequest.toString());
 
-        }catch (Exception ex){
-            logger.error("Unable to publish message", ex);
-        }
-    }
 
-    private String getTopicARN(String topic) throws Exception {
-        switch (topic) {
-            case "wemeet":
-                return snsTopicWemeetARN;
-            default:
-                throw new RuntimeException("No matching topic supported!");
-        }
-    }
+
+
 }

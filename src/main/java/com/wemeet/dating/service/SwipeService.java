@@ -5,9 +5,12 @@ import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.entity.Swipe;
 import com.wemeet.dating.model.entity.User;
+import com.wemeet.dating.model.entity.UserDevice;
 import com.wemeet.dating.model.entity.UserPreference;
 import com.wemeet.dating.model.enums.Gender;
+import com.wemeet.dating.model.enums.NotificationType;
 import com.wemeet.dating.model.enums.SwipeType;
+import com.wemeet.dating.model.request.NotificationRequest;
 import com.wemeet.dating.model.request.SwipeRequest;
 import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.PageResponse;
@@ -24,7 +27,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,17 +37,21 @@ public class SwipeService {
 
     private final SwipeRepository swipeRepository;
     private final UserService userService;
+    private final UserDeviceService userDeviceService;
     private final UserPreferenceService userPreferenceService;
+    private final PushNotificationService pushNotificationService;
 
 
     @Value("${swipe.suggestion.number}")
     private int wemeetSwipeSuggestionNumber;
 
     @Autowired
-    public SwipeService(SwipeRepository swipeRepository, UserService userService, UserPreferenceService userPreferenceService) {
+    public SwipeService(SwipeRepository swipeRepository, UserService userService, UserDeviceService userDeviceService, UserPreferenceService userPreferenceService, PushNotificationService pushNotificationService) {
         this.swipeRepository = swipeRepository;
         this.userService = userService;
+        this.userDeviceService = userDeviceService;
         this.userPreferenceService = userPreferenceService;
+        this.pushNotificationService = pushNotificationService;
     }
 
 
@@ -76,6 +82,23 @@ public class SwipeService {
             Swipe counterSwipe = swipeRepository.findBySwiperAndSwipee(swipee, user);
             if (counterSwipe != null && counterSwipe.getType().equals(SwipeType.LIKE)) {
                 response.setMatch(true);
+                //send notification message
+                List<UserDevice> userDevices = userDeviceService.findDeviceByUser(user);
+                userDevices.stream().forEach(
+                        userDevice -> {
+                            try {
+                                NotificationRequest notificationRequest = new NotificationRequest();
+                                notificationRequest.setNotificationType(NotificationType.PUSH.getName());
+                                notificationRequest.setNotificationText("You have a new match!");
+                                notificationRequest.setRecipientId(userDevice.getDeviceId());
+                                notificationRequest.setUserId(user.getId());
+                                pushNotificationService.publishNotificationTOSQS(notificationRequest);
+                            } catch (Exception exception) {
+                                exception.printStackTrace();
+                            }
+                        }
+                );
+
             }
         }
         response.setSwipe(swipe);
