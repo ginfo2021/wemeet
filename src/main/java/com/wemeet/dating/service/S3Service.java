@@ -8,15 +8,16 @@ import com.wemeet.dating.exception.S3KeyDoesNotExistException;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.request.FileUploadRequest;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.UUID;
 
 @Service
@@ -24,6 +25,8 @@ public class S3Service {
     private SimpleStorageResourceLoader simpleStorageResourceLoader;
     private AmazonS3 amazonS3;
     private final String S3_BUCKET_IMAGE_PATH = "images/";
+
+    private static final Logger logger = LoggerFactory.getLogger(S3Service.class);
 
     @Value("${aws.s3.bucket}") // Default S3 bucket name. You need to create the bucket manually on AWS S3
             String defaultBucketName;
@@ -46,7 +49,14 @@ public class S3Service {
         InputStream inputStream = uploadRequest.getFile().getInputStream();
         uploadKey = uploadRequest.getFileType().getName() + "_" + user.getId() + "_" + uploadKey;
 
-        PutObjectRequest putObjectRequest = new PutObjectRequest(defaultBucketName, S3_BUCKET_IMAGE_PATH + uploadKey, inputStream, new ObjectMetadata());
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setContentLength(uploadRequest.getFile().getBytes().length);
+        objectMetadata.setLastModified(new Date());
+        objectMetadata.setContentType(uploadRequest.getFile().getContentType());
+
+        logger.info("object meta {}-", objectMetadata);
+
+        PutObjectRequest putObjectRequest = new PutObjectRequest(defaultBucketName, S3_BUCKET_IMAGE_PATH + uploadKey, inputStream, objectMetadata);
         putObjectRequest.setCannedAcl(CannedAccessControlList.PublicRead);
 
         amazonS3.putObject(putObjectRequest);
