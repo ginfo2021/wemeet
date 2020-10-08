@@ -9,18 +9,17 @@ import com.wemeet.dating.exception.EntityNotFoundException;
 import com.wemeet.dating.exception.InvalidCredentialException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.TokenInfo;
-import com.wemeet.dating.model.entity.EmailVerification;
-import com.wemeet.dating.model.entity.ForgotPassword;
-import com.wemeet.dating.model.entity.User;
-import com.wemeet.dating.model.entity.UserDevice;
+import com.wemeet.dating.model.entity.*;
 import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.model.enums.DeleteType;
 import com.wemeet.dating.model.enums.TokenType;
+import com.wemeet.dating.model.enums.UserType;
 import com.wemeet.dating.model.request.ChangePasswordRequest;
 import com.wemeet.dating.model.request.ResetPasswordRequest;
 import com.wemeet.dating.model.user.UserLogin;
 import com.wemeet.dating.model.user.UserResult;
 import com.wemeet.dating.model.user.UserSignup;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -35,6 +34,8 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static com.aventrix.jnanoid.jnanoid.NanoIdUtils.DEFAULT_ALPHABET;
 import static com.aventrix.jnanoid.jnanoid.NanoIdUtils.DEFAULT_NUMBER_GENERATOR;
@@ -43,6 +44,7 @@ import static com.aventrix.jnanoid.jnanoid.NanoIdUtils.DEFAULT_NUMBER_GENERATOR;
 public class AuthService {
 
     private final UserService userService;
+    private final AdminUserService adminUserService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtTokenHandler tokenHandler;
     private final EmailVerificationService emailVerificationService;
@@ -60,12 +62,13 @@ public class AuthService {
     ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public AuthService(UserService userService, BCryptPasswordEncoder passwordEncoder, JwtTokenHandler tokenHandler,
+    public AuthService(UserService userService, AdminUserService adminUserService, BCryptPasswordEncoder passwordEncoder, JwtTokenHandler tokenHandler,
                        EmailVerificationService emailVerificationService, UserPreferenceService userPreferenceService,
                        ForgotPasswordService forgotPasswordService, UserDeviceService userDeviceService,
                        NotificationService notificationService
     ) {
         this.userService = userService;
+        this.adminUserService = adminUserService;
         this.passwordEncoder = passwordEncoder;
         this.tokenHandler = tokenHandler;
         this.emailVerificationService = emailVerificationService;
@@ -88,7 +91,7 @@ public class AuthService {
             throw new InvalidCredentialException();
         }
 
-        String accessToken = tokenHandler.createToken(existingUser, new ArrayList<>());
+        String accessToken = tokenHandler.createToken(existingUser, null);
 
         if (StringUtils.hasText(userLogin.getDeviceId())) {
             UserDevice userDevice = new UserDevice();
@@ -111,6 +114,37 @@ public class AuthService {
                 .build();
     }
 
+
+    public UserResult adminLogin(UserLogin userLogin) throws InvalidCredentialException {
+        AdminUser adminUser;
+        User user = new User();
+
+        adminUser = adminUserService.findUserByEmail(userLogin.getEmail());
+
+        if (adminUser == null) {
+            throw new InvalidCredentialException();
+        }
+
+        if (!passwordEncoder.matches(userLogin.getPassword(), adminUser.getPassword())) {
+            throw new InvalidCredentialException();
+        }
+
+        BeanUtils.copyProperties(adminUser, user);
+        String accessToken = tokenHandler.createToken(user, UserType.ADMIN.name());
+
+        return UserResult
+                .builder()
+                .tokenInfo(
+                        TokenInfo
+                                .builder()
+                                .accessToken(accessToken)
+                                .tokenType(TokenType.BEARER)
+                                .build()
+                )
+                .user(user)
+                .build();
+    }
+
     @Transactional
     public UserResult signUp(UserSignup userSignup) throws Exception {
         User newUser = userService.findUserByEmail(userSignup.getEmail());
@@ -119,7 +153,7 @@ public class AuthService {
         }
         newUser = userService.createOrUpdateUser(buildUserFromSignUp(userSignup));
 
-        String accessToken = tokenHandler.createToken(newUser, new ArrayList<>());
+        String accessToken = tokenHandler.createToken(newUser, null);
 
         EmailVerification emailVerification = new EmailVerification();
 
@@ -264,8 +298,10 @@ public class AuthService {
 
     }
 
-    public void deleteUser(User user) {
-
+    public void deleteUser(User user) throws Exception {
+        if (user == null) {
+            throw new InvalidJwtAuthenticationException("User with token not Found");
+        }
         userService.deleteUser(user, DeleteType.SELF);
     }
 
@@ -276,6 +312,23 @@ public class AuthService {
 
         return emailVerificationService.getByEmail(user.getEmail());
     }
+
+    public void resendActivationEmail(User user) throws Exception {
+        if (user == null) {
+            throw new InvalidJwtAuthenticationException("User with token not Found");
+        }
+        EmailVerification emailVerification = emailVerificationService.getByEmail(user.getEmail());
+
+        if(emailVerification == null || !emailVerification.isActive()){
+            emailVerification = new EmailVerification();
+            emailVerification.setUserEmail(user.getEmail());
+            emailVerification.setToken(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8));
+            emailVerification.setActive(true);
+            emailVerification = emailVerificationService.saveEmail(emailVerification);
+        }
+        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(emailVerification));
+    }
+
 
     public ForgotPassword getForgotPasswordToken(User user) throws Exception {
         if (user == null) {

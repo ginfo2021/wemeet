@@ -3,14 +3,12 @@ package com.wemeet.dating.service;
 import com.wemeet.dating.dao.SwipeRepository;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
+import com.wemeet.dating.exception.PreferenceNotSetException;
 import com.wemeet.dating.model.entity.Swipe;
 import com.wemeet.dating.model.entity.User;
-import com.wemeet.dating.model.entity.UserDevice;
 import com.wemeet.dating.model.entity.UserPreference;
 import com.wemeet.dating.model.enums.Gender;
-import com.wemeet.dating.model.enums.NotificationType;
 import com.wemeet.dating.model.enums.SwipeType;
-import com.wemeet.dating.model.request.NotificationRequest;
 import com.wemeet.dating.model.request.SwipeRequest;
 import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.PageResponse;
@@ -37,21 +35,17 @@ public class SwipeService {
 
     private final SwipeRepository swipeRepository;
     private final UserService userService;
-    private final UserDeviceService userDeviceService;
     private final UserPreferenceService userPreferenceService;
-    private final PushNotificationService pushNotificationService;
 
 
     @Value("${swipe.suggestion.number}")
     private int wemeetSwipeSuggestionNumber;
 
     @Autowired
-    public SwipeService(SwipeRepository swipeRepository, UserService userService, UserDeviceService userDeviceService, UserPreferenceService userPreferenceService, PushNotificationService pushNotificationService) {
+    public SwipeService(SwipeRepository swipeRepository, UserService userService, UserPreferenceService userPreferenceService) {
         this.swipeRepository = swipeRepository;
         this.userService = userService;
-        this.userDeviceService = userDeviceService;
         this.userPreferenceService = userPreferenceService;
-        this.pushNotificationService = pushNotificationService;
     }
 
 
@@ -82,23 +76,7 @@ public class SwipeService {
             Swipe counterSwipe = swipeRepository.findBySwiperAndSwipee(swipee, user);
             if (counterSwipe != null && counterSwipe.getType().equals(SwipeType.LIKE)) {
                 response.setMatch(true);
-                //send notification message
-                List<UserDevice> userDevices = userDeviceService.findDeviceByUser(user);
-                userDevices.stream().forEach(
-                        userDevice -> {
-                            try {
-                                NotificationRequest notificationRequest = new NotificationRequest();
-                                notificationRequest.setNotificationType(NotificationType.PUSH.getName());
-                                notificationRequest.setNotificationText("You have a new match!");
-                                notificationRequest.setRecipientId(userDevice.getDeviceId());
-                                notificationRequest.setUserId(user.getId());
-                                pushNotificationService.publishNotificationTOSQS(notificationRequest);
-                            } catch (Exception exception) {
-                                exception.printStackTrace();
-                            }
-                        }
-                );
-
+                //TODO: SEND NOTIFICATION TO MATCHED USER(SWIPEE)
             }
         }
         response.setSwipe(swipe);
@@ -145,6 +123,14 @@ public class SwipeService {
         }
         List<UserProfile> userProfiles = new ArrayList<>();
         UserPreference userPreference = userPreferenceService.findUserPreference(user.getId());
+
+        if (userPreference.getGenderPreference() == null
+                || userPreference.getGenderPreference().isEmpty()
+                || userPreference.getMinAge() == null
+                || userPreference.getMaxAge() == null) {
+            throw new PreferenceNotSetException("User has not set preferences, Update profile");
+        }
+
         List<BigInteger> swipeSuggestions =
                 swipeRepository.findSwipeSuggestions(user.getId(), userPreference.getGenderPreference().stream().map(Gender::getName).collect(Collectors.toList()), wemeetSwipeSuggestionNumber);
 
@@ -197,6 +183,23 @@ public class SwipeService {
         }
 
         return userProfile;
+    }
+
+
+    public boolean usersMatch(User firstUser, User secondUser) {
+        boolean match = true;
+        Swipe oneLikes2 = swipeRepository.findBySwiperAndSwipee(firstUser, secondUser);
+        if (oneLikes2 == null || oneLikes2.getType() == null || !oneLikes2.getType().equals(SwipeType.LIKE)) {
+            match = false;
+        }
+
+        Swipe twoLikes1 = swipeRepository.findBySwiperAndSwipee(secondUser, firstUser);
+        if (twoLikes1 == null || twoLikes1.getType() == null || !twoLikes1.getType().equals(SwipeType.LIKE)) {
+            match = false;
+        }
+
+
+        return match;
     }
 
 }
