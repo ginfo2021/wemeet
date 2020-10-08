@@ -1,18 +1,13 @@
 package com.wemeet.dating.api;
 
 
-import com.wemeet.dating.exception.BadRequestException;
-import com.wemeet.dating.model.entity.User;
-import com.wemeet.dating.model.enums.DeleteType;
-import com.wemeet.dating.model.request.UserImageRequest;
-import com.wemeet.dating.model.request.UserLocationRequest;
-import com.wemeet.dating.model.request.UserProfile;
+import com.wemeet.dating.model.request.*;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
+import com.wemeet.dating.service.ReportService;
 import com.wemeet.dating.service.UserService;
 import com.wemeet.dating.util.validation.constraint.ActiveUser;
-import com.wemeet.dating.util.validation.constraint.AdminUser;
 import com.wemeet.dating.util.validation.constraint.NotSuspendedUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -28,10 +23,12 @@ import javax.validation.Valid;
 public class UserController {
 
     private final UserService userService;
+    private final ReportService reportService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, ReportService reportService) {
         this.userService = userService;
+        this.reportService = reportService;
     }
 
 
@@ -92,18 +89,18 @@ public class UserController {
                 .build();
     }
 
-    @AdminUser(message = "Current User Not Admin")
-    @PostMapping(value = "/admin-delete",
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
+    @PostMapping(value = "/report",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse deleteUserAdmin(@AuthenticationPrincipal UserResult userResult, @RequestParam(value = "userId") Long userId) throws Exception {
-        User user = userService.findById(userId);
-        userService.deleteUser(user, DeleteType.ADMIN);
-        return ApiResponse
-                .builder()
-                .message("Successfully deleted account")
+    public ApiResponse report(@Valid @RequestBody ReportRequest reportRequest,
+                             @AuthenticationPrincipal UserResult userResult) throws Exception {
+        reportService.report(reportRequest, userResult.getUser());
+        return ApiResponse.builder()
+                .message("Report successful")
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
-
     }
 
 }
