@@ -10,6 +10,7 @@ import com.wemeet.dating.model.user.UserLogin;
 import com.wemeet.dating.model.user.UserResult;
 import com.wemeet.dating.model.user.UserSignup;
 import com.wemeet.dating.service.AuthService;
+import com.wemeet.dating.util.validation.constraint.AdminUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
@@ -71,6 +72,19 @@ public class AuthController {
                 .build();
     }
 
+
+
+    @PostMapping(value = "/login/admin",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse adminLogin(@Valid @RequestBody UserLogin login) throws InvalidCredentialException {
+        return ApiResponse.builder()
+                .message("Login Successful")
+                .data(authService.adminLogin(login))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse getUser(@AuthenticationPrincipal UserResult userResult) {
 
@@ -83,7 +97,7 @@ public class AuthController {
     }
 
     @Profile(value = {"!production"})
-    @GetMapping(value = "/emailverification",produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/emailverification", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse getEmailVerificationToken(@AuthenticationPrincipal UserResult userResult) throws Exception {
 
         return ApiResponse
@@ -94,8 +108,19 @@ public class AuthController {
                 .build();
     }
 
+    @PostMapping(value = "/resend-email", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse resendActivationEmail(@AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        authService.resendActivationEmail(userResult.getUser());
+        return ApiResponse
+                .builder()
+                .message("Sent successfully, Check your email")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
     @Profile(value = {"!production"})
-    @GetMapping(value = "/passwordtoken",produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/passwordtoken", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse getForgotPasswordToken(@AuthenticationPrincipal UserResult userResult) throws Exception {
 
         return ApiResponse
@@ -157,7 +182,7 @@ public class AuthController {
     @PostMapping(value = "/self-delete",
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse deleteUser(@AuthenticationPrincipal UserResult userResult) throws Exception {
-        authService.deleteUser( userResult.getUser());
+        authService.deleteUser(userResult.getUser());
         return ApiResponse
                 .builder()
                 .message("Successfully deleted account")

@@ -4,23 +4,25 @@ package com.wemeet.dating.service;
 import com.wemeet.dating.dao.UserRepository;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
-import com.wemeet.dating.model.entity.DeletedUser;
-import com.wemeet.dating.model.entity.User;
-import com.wemeet.dating.model.entity.UserImage;
-import com.wemeet.dating.model.entity.UserPreference;
+import com.wemeet.dating.model.entity.*;
 import com.wemeet.dating.model.enums.DeleteType;
+import com.wemeet.dating.model.enums.SwipeType;
+import com.wemeet.dating.model.request.ReportRequest;
 import com.wemeet.dating.model.request.UserImageRequest;
 import com.wemeet.dating.model.request.UserLocationRequest;
 import com.wemeet.dating.model.request.UserProfile;
+import com.wemeet.dating.model.response.PageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -218,5 +220,46 @@ public class UserService {
             }
 
         }
+    }
+
+    public void suspendUser(User user) {
+        if (user == null)
+            return;
+        user.setSuspended(true);
+        createOrUpdateUser(user);
+    }
+
+    public void restoreUser(User user) {
+        if (user == null)
+            return;
+        user.setSuspended(false);
+        createOrUpdateUser(user);
+    }
+
+
+    public PageResponse<UserProfile> getsuspendedUsers(int pageNum, int pageSize) {
+
+        List<UserProfile> userProfiles = new ArrayList<>();
+        PageResponse<UserProfile> userProfilePage = new PageResponse<>();
+        Page<User> userList = userRepository.findBySuspendedIsTrueAndDeletedIsFalse(PageRequest.of(pageNum, pageSize));
+
+
+        userList.toList().forEach(a -> {
+            try {
+                userProfiles.add(getProfile(a.getId()));
+            } catch (Exception e) {
+                logger.error("Error fetching user profile for user id: " + a, e);
+            }
+        });
+
+        userProfilePage.setContent(userProfiles);
+        userProfilePage.setPageNum(userList.getNumber());
+        userProfilePage.setPageSize(userList.getSize());
+        userProfilePage.setNumberOfElements(userList.getNumberOfElements());
+        userProfilePage.setTotalElements(userList.getTotalElements());
+        userProfilePage.setTotalPages(userList.getTotalPages());
+
+        return userProfilePage;
+
     }
 }

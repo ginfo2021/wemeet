@@ -3,18 +3,23 @@ package com.wemeet.dating.config.security;
 
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.TokenInfo;
+import com.wemeet.dating.model.entity.AdminUser;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.enums.TokenType;
+import com.wemeet.dating.model.enums.UserType;
 import com.wemeet.dating.model.user.UserResult;
+import com.wemeet.dating.service.AdminUserService;
 import com.wemeet.dating.service.AuthService;
 import com.wemeet.dating.service.UserService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
@@ -41,16 +46,22 @@ public class JwtTokenHandler {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private AdminUserService adminUserService;
+
+
     @PostConstruct
     protected void init() {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
         validityInMilliseconds = validityInMilliseconds * 3600000;
     }
 
-    public String createToken(User user, List<String> roles) {
+    public String createToken(User user, String role) {
 
         Claims claims = Jwts.claims().setSubject(user.getEmail());
-        claims.put("roles", roles);
+        if (StringUtils.hasText(role)) {
+            claims.put("role", role);
+        }
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
@@ -66,7 +77,23 @@ public class JwtTokenHandler {
     }
 
     public UserResult getAuthentication(String token) {
+        boolean admin = false;
         User user = userService.findUserByEmail(getUsername(token));
+        String userRole = getRole(token);
+        //FIND ADMIN USER HERE
+        if (user == null && StringUtils.hasText(userRole)) {
+
+            AdminUser adminUser = adminUserService.findUserByEmail(getUsername(token));
+            if (adminUser != null) {
+                user = new User();
+                BeanUtils.copyProperties(adminUser, user);
+                admin = true;
+            }
+
+        }
+
+        UserType userType = admin ? UserType.ADMIN : UserType.USER;
+
 
         return UserResult
                 .builder()
@@ -77,12 +104,18 @@ public class JwtTokenHandler {
                                 .build()
                 )
                 .user(user)
+                .userType(userType)
                 .build();
 
     }
 
     private String getUsername(String token) {
         return Jwts.parserBuilder().setSigningKey(this.key).build().parseClaimsJws(token).getBody().getSubject();
+    }
+
+    private String getRole(String token) {
+        Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+        return claims.getBody().get("role", String.class);
     }
 
     public String resolveToken(HttpServletRequest req) {

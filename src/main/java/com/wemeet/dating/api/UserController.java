@@ -1,13 +1,11 @@
 package com.wemeet.dating.api;
 
 
-import com.wemeet.dating.exception.BadRequestException;
-import com.wemeet.dating.model.request.UserImageRequest;
-import com.wemeet.dating.model.request.UserLocationRequest;
-import com.wemeet.dating.model.request.UserProfile;
+import com.wemeet.dating.model.request.*;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
+import com.wemeet.dating.service.ReportService;
 import com.wemeet.dating.service.UserService;
 import com.wemeet.dating.util.validation.constraint.ActiveUser;
 import com.wemeet.dating.util.validation.constraint.NotSuspendedUser;
@@ -25,10 +23,12 @@ import javax.validation.Valid;
 public class UserController {
 
     private final UserService userService;
+    private final ReportService reportService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, ReportService reportService) {
         this.userService = userService;
+        this.reportService = reportService;
     }
 
 
@@ -38,7 +38,7 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse updateUserProfile(@Valid @RequestBody UserProfile profileRequest,
-                             @AuthenticationPrincipal UserResult userResult) throws Exception {
+                                         @AuthenticationPrincipal UserResult userResult) throws Exception {
         profileRequest.setId(userResult.getUser().getId());
         return ApiResponse.builder()
                 .message("Successfully saved user profile")
@@ -65,7 +65,7 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse updateUserLocation(@Valid @RequestBody UserLocationRequest locationRequest,
-                                         @AuthenticationPrincipal UserResult userResult) throws Exception {
+                                          @AuthenticationPrincipal UserResult userResult) throws Exception {
 
         userService.updateUserLocation(locationRequest, userResult.getUser());
         return ApiResponse.builder()
@@ -80,11 +80,25 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse updateUserImages(@Valid @RequestBody UserImageRequest imageRequest,
-                                          @AuthenticationPrincipal UserResult userResult) throws Exception {
+                                        @AuthenticationPrincipal UserResult userResult) throws Exception {
 
         userService.updateUserImages(imageRequest, userResult.getUser());
         return ApiResponse.builder()
                 .message("Successfully updated user images")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
+    @PostMapping(value = "/report",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse report(@Valid @RequestBody ReportRequest reportRequest,
+                             @AuthenticationPrincipal UserResult userResult) throws Exception {
+        reportService.report(reportRequest, userResult.getUser());
+        return ApiResponse.builder()
+                .message("Report successful")
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
