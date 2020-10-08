@@ -1,5 +1,6 @@
 package com.wemeet.dating.service;
 
+import com.wemeet.dating.model.enums.UserType;
 import com.wemeet.dating.model.user.UserResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,5 +60,24 @@ public class UserVerificationService {
             return false;
         }
 
+    }
+
+    public boolean isAdminUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return false;
+        }
+
+        if (authentication.getPrincipal() instanceof UserResult) {
+            UserResult userResult = (UserResult) authentication.getPrincipal();
+
+            if (userResult == null || userResult.getUser() == null || userResult.getUserType() == null) {
+                return false;
+            }
+            return userResult.getUserType().equals(UserType.ADMIN);
+
+        } else {
+            return false;
+        }
     }
 }
