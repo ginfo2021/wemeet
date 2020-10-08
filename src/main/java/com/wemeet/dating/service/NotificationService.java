@@ -1,7 +1,9 @@
 package com.wemeet.dating.service;
 
 import com.wemeet.dating.events.OnGeneratePasswordToken;
+import com.wemeet.dating.events.OnInviteAdminEvent;
 import com.wemeet.dating.events.OnRegistrationCompleteEvent;
+import com.wemeet.dating.model.entity.AdminInvite;
 import com.wemeet.dating.model.entity.EmailVerification;
 import com.wemeet.dating.model.entity.ForgotPassword;
 import org.slf4j.Logger;
@@ -39,6 +41,27 @@ public class NotificationService {
        }catch(Exception exception){
            logger.error("Unable to send registration email", exception);
        }
+
+    }
+
+
+    @EventListener
+    public void inviteAdmin(OnInviteAdminEvent event) {
+        try {
+            AdminInvite adminInvite = event.getAdminInvite();
+            String subject = "Admin Invitation";
+
+            String message = "You've been invited copy token" + " " + adminInvite.getToken();
+            //move token creation here
+            SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+            simpleMailMessage.setFrom(sender);
+            simpleMailMessage.setTo(adminInvite.getUserEmail());
+            simpleMailMessage.setSubject(subject);
+            simpleMailMessage.setText(message);
+            this.mailSender.send(simpleMailMessage);
+        }catch(Exception exception){
+            logger.error("Unable to send admin invitation email", exception);
+        }
 
     }
 
