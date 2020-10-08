@@ -3,6 +3,7 @@ package com.wemeet.dating.service;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.wemeet.dating.config.security.JwtTokenHandler;
 import com.wemeet.dating.events.OnGeneratePasswordToken;
+import com.wemeet.dating.events.OnInviteAdminEvent;
 import com.wemeet.dating.events.OnRegistrationCompleteEvent;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.EntityNotFoundException;
@@ -16,9 +17,7 @@ import com.wemeet.dating.model.enums.TokenType;
 import com.wemeet.dating.model.enums.UserType;
 import com.wemeet.dating.model.request.ChangePasswordRequest;
 import com.wemeet.dating.model.request.ResetPasswordRequest;
-import com.wemeet.dating.model.user.UserLogin;
-import com.wemeet.dating.model.user.UserResult;
-import com.wemeet.dating.model.user.UserSignup;
+import com.wemeet.dating.model.user.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,9 +32,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 
 import static com.aventrix.jnanoid.jnanoid.NanoIdUtils.DEFAULT_ALPHABET;
 import static com.aventrix.jnanoid.jnanoid.NanoIdUtils.DEFAULT_NUMBER_GENERATOR;
@@ -51,7 +47,7 @@ public class AuthService {
     private final UserPreferenceService userPreferenceService;
     private final ForgotPasswordService forgotPasswordService;
     private final UserDeviceService userDeviceService;
-    private final NotificationService notificationService;
+    private final AdminInviteService adminInviteService;
     public static final char[] VERIFY_EMAIL_ALPHABET =
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
@@ -65,8 +61,8 @@ public class AuthService {
     public AuthService(UserService userService, AdminUserService adminUserService, BCryptPasswordEncoder passwordEncoder, JwtTokenHandler tokenHandler,
                        EmailVerificationService emailVerificationService, UserPreferenceService userPreferenceService,
                        ForgotPasswordService forgotPasswordService, UserDeviceService userDeviceService,
-                       NotificationService notificationService
-    ) {
+                       NotificationService notificationService,
+                       AdminInviteService adminInviteService) {
         this.userService = userService;
         this.adminUserService = adminUserService;
         this.passwordEncoder = passwordEncoder;
@@ -75,7 +71,7 @@ public class AuthService {
         this.userPreferenceService = userPreferenceService;
         this.forgotPasswordService = forgotPasswordService;
         this.userDeviceService = userDeviceService;
-        this.notificationService = notificationService;
+        this.adminInviteService = adminInviteService;
     }
 
     public UserResult login(UserLogin userLogin) throws InvalidCredentialException {
@@ -115,17 +111,17 @@ public class AuthService {
     }
 
 
-    public UserResult adminLogin(UserLogin userLogin) throws InvalidCredentialException {
+    public UserResult adminLogin(AdminLogin adminLogin) throws InvalidCredentialException {
         AdminUser adminUser;
         User user = new User();
 
-        adminUser = adminUserService.findUserByEmail(userLogin.getEmail());
+        adminUser = adminUserService.findUserByEmail(adminLogin.getEmail());
 
         if (adminUser == null) {
             throw new InvalidCredentialException();
         }
 
-        if (!passwordEncoder.matches(userLogin.getPassword(), adminUser.getPassword())) {
+        if (!passwordEncoder.matches(adminLogin.getPassword(), adminUser.getPassword())) {
             throw new InvalidCredentialException();
         }
 
@@ -144,6 +140,68 @@ public class AuthService {
                 .user(user)
                 .build();
     }
+
+
+    public void inviteAdmin(User user, String email) throws Exception {
+
+        User existingUser = userService.findUserByEmail(email);
+        if (existingUser != null) {
+            throw new BadRequestException("Cannot use a user email for admin");
+        }
+        AdminUser adminUser = adminUserService.findUserByEmail(email);
+        if (adminUser != null) {
+            throw new DuplicateKeyException("This user is already an admin");
+        }
+
+        AdminInvite existingInvite = adminInviteService.getByEmail(email);
+        if (existingInvite != null && existingInvite.isActive()) {
+            throw new DuplicateKeyException("This user already has an active invite");
+        }
+
+
+        AdminInvite adminInvite = new AdminInvite();
+        adminInvite.setUserEmail(email);
+        adminInvite.setToken(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8));
+        adminInvite.setActive(true);
+
+        adminInvite = adminInviteService.saveInvite(adminInvite);
+        eventPublisher.publishEvent(new OnInviteAdminEvent(adminInvite));
+    }
+
+
+    @Transactional
+    public UserResult adminSignUp(AdminSignup adminSignup) throws Exception {
+
+        if(!adminInviteService.verifyInvite(adminSignup)){
+            throw new BadRequestException("Invalid Token");
+        }
+        User user = new User();
+
+        AdminUser adminUser = adminUserService.createOrUpdateUser(buildUserFromSignUp(adminSignup));
+
+
+
+        AdminInvite adminInvite = adminInviteService.getByToken(adminSignup.getToken());
+        adminInvite.setActive(false);
+        adminInviteService.saveInvite(adminInvite);
+
+
+        BeanUtils.copyProperties(adminUser, user);
+        String accessToken = tokenHandler.createToken(user, UserType.ADMIN.name());
+
+        return UserResult
+                .builder()
+                .tokenInfo(
+                        TokenInfo
+                                .builder()
+                                .accessToken(accessToken)
+                                .tokenType(TokenType.BEARER)
+                                .build()
+                )
+                .user(user)
+                .build();
+    }
+
 
     @Transactional
     public UserResult signUp(UserSignup userSignup) throws Exception {
@@ -182,6 +240,19 @@ public class AuthService {
                 )
                 .user(newUser)
                 .build();
+    }
+
+    private AdminUser buildUserFromSignUp(AdminSignup signup) throws BadRequestException {
+        AdminUser newUser = new AdminUser();
+        newUser.setFirstName(signup.getFirstName());
+        newUser.setLastName(signup.getLastName());
+        newUser.setEmail(signup.getEmail());
+        newUser.setActive(true);
+        if (signup.getPassword() != null) {
+            newUser.setPassword(passwordEncoder.encode(signup.getPassword()));
+        }
+
+        return newUser;
     }
 
     private User buildUserFromSignUp(UserSignup userSignup) throws BadRequestException {
@@ -319,7 +390,7 @@ public class AuthService {
         }
         EmailVerification emailVerification = emailVerificationService.getByEmail(user.getEmail());
 
-        if(emailVerification == null || !emailVerification.isActive()){
+        if (emailVerification == null || !emailVerification.isActive()) {
             emailVerification = new EmailVerification();
             emailVerification.setUserEmail(user.getEmail());
             emailVerification.setToken(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8));
