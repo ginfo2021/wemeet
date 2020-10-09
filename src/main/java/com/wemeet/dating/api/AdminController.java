@@ -6,6 +6,7 @@ import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
 import com.wemeet.dating.service.ReportService;
+import com.wemeet.dating.service.SongRequestService;
 import com.wemeet.dating.service.UserService;
 import com.wemeet.dating.util.validation.constraint.AdminUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +22,13 @@ public class AdminController {
 
     private final UserService userService;
     private final ReportService reportService;
+    private final SongRequestService songRequestService;
 
     @Autowired
-    public AdminController(UserService userService, ReportService reportService) {
+    public AdminController(UserService userService, ReportService reportService, SongRequestService songRequestService) {
         this.userService = userService;
         this.reportService = reportService;
+        this.songRequestService = songRequestService;
     }
 
     @AdminUser(message = "Current User Not Admin")
@@ -92,7 +95,7 @@ public class AdminController {
                                         @RequestParam(defaultValue = "10") int pageSize) throws Exception {
 
         return ApiResponse.builder()
-                .message("Fetched messages successfully")
+                .message("Fetched  successfully")
                 .data(reportService.getReportedUsers(userId, pageNum, pageSize))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
@@ -106,8 +109,23 @@ public class AdminController {
                                          @RequestParam(defaultValue = "10") int pageSize) throws Exception {
 
         return ApiResponse.builder()
-                .message("Fetched messages successfully")
+                .message("Fetched  successfully")
                 .data(userService.getsuspendedUsers(pageNum, pageSize))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @AdminUser(message = "Current User Not Admin")
+    @GetMapping(value = "/song-requests", produces = MediaType.APPLICATION_JSON_VALUE)
+
+    public ApiResponse getSongRequests(@AuthenticationPrincipal UserResult userResult,
+                                        @RequestParam(value = "userId", required = false) Long userId,
+                                        @RequestParam(defaultValue = "0") int pageNum,
+                                        @RequestParam(defaultValue = "10") int pageSize) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Fetched  successfully")
+                .data(songRequestService.getRequests(userId, pageNum, pageSize))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
