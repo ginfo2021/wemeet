@@ -8,6 +8,9 @@ import com.wemeet.dating.model.response.ProfilePhotoResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Service
 public class StorageService {
 
@@ -29,6 +32,13 @@ public class StorageService {
 
         if(request.getFile().isEmpty()){
             throw new InvalidFileTypeException("Invalid file found");
+        }
+
+        String[] allowedContentTypes = new String[]{"image/jpeg", "image/jpg", "image/png"};
+        List<String> list = Arrays.asList(allowedContentTypes);
+
+        if (!list.contains(request.getFile().getContentType())){
+            throw new InvalidFileTypeException("Invalid file type!");
         }
 
         String imageUrl = s3Service.putObject(user, request);
