@@ -7,6 +7,5 @@ import java.util.List;
 
 public interface UserDeviceRepository extends BaseRepository<UserDevice, Long> {
     List<UserDevice> findByUser(User user);
-
-
+    UserDevice findByDeviceId(String deviceId);
 }

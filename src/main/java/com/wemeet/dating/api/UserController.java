@@ -1,11 +1,16 @@
 package com.wemeet.dating.api;
 
 
+import com.wemeet.dating.model.request.NotificationRequest;
+import com.wemeet.dating.model.request.UserImageRequest;
+import com.wemeet.dating.model.request.UserLocationRequest;
+import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.entity.SongRequest;
 import com.wemeet.dating.model.request.*;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
+import com.wemeet.dating.service.PushNotificationService;
 import com.wemeet.dating.service.ReportService;
 import com.wemeet.dating.service.SongRequestService;
 import com.wemeet.dating.service.UserService;
@@ -28,13 +33,17 @@ public class UserController {
     private final ReportService reportService;
     private final SongRequestService songRequestService;
 
+    private final PushNotificationService pushNotificationService;
+
     @Autowired
-    public UserController(UserService userService, ReportService reportService, SongRequestService songRequestService) {
+    public UserController(UserService userService,
+                          PushNotificationService pushNotificationService,
+                          ReportService reportService) {
         this.userService = userService;
+        this.pushNotificationService = pushNotificationService;
         this.reportService = reportService;
         this.songRequestService = songRequestService;
     }
-
 
     @NotSuspendedUser(message = "User is suspended")
     @ActiveUser(message = "User not active")
@@ -95,11 +104,25 @@ public class UserController {
 
     @NotSuspendedUser(message = "User is suspended")
     @ActiveUser(message = "User not active")
+    @PostMapping(value = "/publish",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse publish(@Valid @RequestBody NotificationRequest notificationRequest,
+                                        @AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Successfully published message")
+                .data(pushNotificationService.publishNotificationTOSQS(notificationRequest))
+                .build();
+    }
+
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
     @PostMapping(value = "/report",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse report(@Valid @RequestBody ReportRequest reportRequest,
-                             @AuthenticationPrincipal UserResult userResult) throws Exception {
+                              @AuthenticationPrincipal UserResult userResult) throws Exception {
         reportService.report(reportRequest, userResult.getUser());
         return ApiResponse.builder()
                 .message("Report successful")

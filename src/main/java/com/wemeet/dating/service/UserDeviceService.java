@@ -34,6 +34,10 @@ public class UserDeviceService {
 
     }
 
+    public UserDevice findOne(String deviceId){
+        return userDeviceRepository.findByDeviceId(deviceId);
+    }
+
     public List<UserDevice> findDeviceByUser(User user) {
         return userDeviceRepository.findByUser(user);
     }

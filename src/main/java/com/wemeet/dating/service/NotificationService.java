@@ -22,6 +22,7 @@ public class NotificationService {
 
     @Value("${mail.default.sender}")
     private String sender;
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @EventListener
@@ -84,4 +85,9 @@ public class NotificationService {
         }
 
     }
+
+
+
+
+
 }
