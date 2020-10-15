@@ -38,7 +38,8 @@ public class UserController {
     @Autowired
     public UserController(UserService userService,
                           PushNotificationService pushNotificationService,
-                          ReportService reportService) {
+                          ReportService reportService,
+                          SongRequestService songRequestService) {
         this.userService = userService;
         this.pushNotificationService = pushNotificationService;
         this.reportService = reportService;
