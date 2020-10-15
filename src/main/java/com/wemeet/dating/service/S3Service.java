@@ -25,6 +25,8 @@ public class S3Service {
     private SimpleStorageResourceLoader simpleStorageResourceLoader;
     private AmazonS3 amazonS3;
     private final String S3_BUCKET_IMAGE_PATH = "images/";
+    private final String S3_BUCKET_MUSIC_PATH = "music/";
+
 
     private static final Logger logger = LoggerFactory.getLogger(S3Service.class);
 
@@ -45,6 +47,8 @@ public class S3Service {
     }
 
     public String putObject(User user, FileUploadRequest uploadRequest) throws IOException {
+        String useBucket = null;
+
         String uploadKey = UUID.randomUUID().toString();
         InputStream inputStream = uploadRequest.getFile().getInputStream();
         uploadKey = uploadRequest.getFileType().getName() + "_" + user.getId() + "_" + uploadKey;
@@ -56,15 +60,21 @@ public class S3Service {
 
         logger.info("object meta {}-", objectMetadata);
 
-        PutObjectRequest putObjectRequest = new PutObjectRequest(defaultBucketName, S3_BUCKET_IMAGE_PATH + uploadKey, inputStream, objectMetadata);
+        if (uploadRequest.getFileType().getName().equals("MUSIC")){
+            useBucket = S3_BUCKET_MUSIC_PATH;
+        }else {
+            useBucket = S3_BUCKET_IMAGE_PATH;
+        }
+
+        PutObjectRequest putObjectRequest = new PutObjectRequest(defaultBucketName, useBucket + uploadKey, inputStream, objectMetadata);
         putObjectRequest.setCannedAcl(CannedAccessControlList.PublicRead);
 
         amazonS3.putObject(putObjectRequest);
-        String imageUrl = amazonS3.getUrl(defaultBucketName, S3_BUCKET_IMAGE_PATH + uploadKey).toString();
+        String fileUrl = amazonS3.getUrl(defaultBucketName, useBucket + uploadKey).toString();
 
         IOUtils.closeQuietly(inputStream);
 
-        return imageUrl;
+        return fileUrl;
     }
 
     public void removeObject(String bucketName, String key) throws S3KeyDoesNotExistException {

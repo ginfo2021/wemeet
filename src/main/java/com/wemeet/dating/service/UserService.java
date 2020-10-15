@@ -4,10 +4,11 @@ package com.wemeet.dating.service;
 import com.wemeet.dating.dao.UserRepository;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
-import com.wemeet.dating.model.entity.*;
+import com.wemeet.dating.model.entity.DeletedUser;
+import com.wemeet.dating.model.entity.User;
+import com.wemeet.dating.model.entity.UserImage;
+import com.wemeet.dating.model.entity.UserPreference;
 import com.wemeet.dating.model.enums.DeleteType;
-import com.wemeet.dating.model.enums.SwipeType;
-import com.wemeet.dating.model.request.ReportRequest;
 import com.wemeet.dating.model.request.UserImageRequest;
 import com.wemeet.dating.model.request.UserLocationRequest;
 import com.wemeet.dating.model.request.UserProfile;
@@ -22,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -262,4 +262,29 @@ public class UserService {
         return userProfilePage;
 
     }
+
+    @Transactional(readOnly = true)
+    public long getUsersCount(){
+        long count = userRepository.count();
+        return count;
+    }
+
+    @Transactional(readOnly = true)
+    public long getTotalDeactivatedUsersCount(){
+        long count = userRepository.getDeactivatedUsersCount();
+        return count;
+    }
+
+    @Transactional(readOnly = true)
+    public long getTotalFreeAccountsCount(){
+        long count = userRepository.getFreeUsersCount();
+        return count;
+    }
+
+    @Transactional(readOnly = true)
+    public long getTotalPremiumAccountsCount(){
+        long count = userRepository.getPremiumUsersCount();
+        return count;
+    }
+
 }
