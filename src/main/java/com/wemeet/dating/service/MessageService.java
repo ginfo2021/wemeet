@@ -64,7 +64,7 @@ public class MessageService {
         message = messageRepository.save(message);
 
         //TODO: SEND NOTIFICATION TO RECEIVER
-        pushNotificationService.pushNotification("You have a new like!", "test");
+        pushNotificationService.pushNotification("You have a new message!", "test");
         return new MessageResponse(message);
 
     }
