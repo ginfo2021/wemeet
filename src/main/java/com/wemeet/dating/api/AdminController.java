@@ -188,7 +188,7 @@ public class AdminController {
     public ApiResponse createPlaylist(@AuthenticationPrincipal UserResult userResult,
                                    @RequestBody CreatePlaylistRequest request) throws Exception {
 
-        musicService.createPlaylist(userResult.getUser(), request);
+        musicService.createOrUpdatePlaylist(userResult.getUser(), request);
 
         return ApiResponse.builder()
                 .message("Playlist created successfully")
