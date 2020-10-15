@@ -6,9 +6,7 @@ import com.wemeet.dating.model.request.ChangePasswordRequest;
 import com.wemeet.dating.model.request.ResetPasswordRequest;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
-import com.wemeet.dating.model.user.UserLogin;
-import com.wemeet.dating.model.user.UserResult;
-import com.wemeet.dating.model.user.UserSignup;
+import com.wemeet.dating.model.user.*;
 import com.wemeet.dating.service.AuthService;
 import com.wemeet.dating.util.validation.constraint.AdminUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +58,20 @@ public class AuthController {
 
     }
 
+    @PostMapping(value = "/signup/admin",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse adminSignUp(@Valid @RequestBody AdminSignup adminSignup) throws Exception {
+
+        return ApiResponse
+                .builder()
+                .message("User Signed Up Successfully")
+                .data(authService.adminSignUp(adminSignup))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+
+    }
+
 
     @PostMapping(value = "/login",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -77,7 +89,7 @@ public class AuthController {
     @PostMapping(value = "/login/admin",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse adminLogin(@Valid @RequestBody UserLogin login) throws InvalidCredentialException {
+    public ApiResponse adminLogin(@Valid @RequestBody AdminLogin login) throws InvalidCredentialException {
         return ApiResponse.builder()
                 .message("Login Successful")
                 .data(authService.adminLogin(login))
@@ -112,6 +124,18 @@ public class AuthController {
     public ApiResponse resendActivationEmail(@AuthenticationPrincipal UserResult userResult) throws Exception {
 
         authService.resendActivationEmail(userResult.getUser());
+        return ApiResponse
+                .builder()
+                .message("Sent successfully, Check your email")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @AdminUser
+    @PostMapping(value = "/admin-invite", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse inviteAdmin(@AuthenticationPrincipal UserResult userResult, @RequestParam(value = "email") String email) throws Exception {
+
+        authService.inviteAdmin(userResult.getUser(), email);
         return ApiResponse
                 .builder()
                 .message("Sent successfully, Check your email")

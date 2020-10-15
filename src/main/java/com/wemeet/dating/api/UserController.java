@@ -5,12 +5,14 @@ import com.wemeet.dating.model.request.NotificationRequest;
 import com.wemeet.dating.model.request.UserImageRequest;
 import com.wemeet.dating.model.request.UserLocationRequest;
 import com.wemeet.dating.model.request.UserProfile;
+import com.wemeet.dating.model.entity.SongRequest;
+import com.wemeet.dating.model.request.*;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
 import com.wemeet.dating.service.PushNotificationService;
-import com.wemeet.dating.model.request.*;
 import com.wemeet.dating.service.ReportService;
+import com.wemeet.dating.service.SongRequestService;
 import com.wemeet.dating.service.UserService;
 import com.wemeet.dating.util.validation.constraint.ActiveUser;
 import com.wemeet.dating.util.validation.constraint.NotSuspendedUser;
@@ -29,6 +31,7 @@ public class UserController {
 
     private final UserService userService;
     private final ReportService reportService;
+    private final SongRequestService songRequestService;
 
     private final PushNotificationService pushNotificationService;
 
@@ -39,6 +42,7 @@ public class UserController {
         this.userService = userService;
         this.pushNotificationService = pushNotificationService;
         this.reportService = reportService;
+        this.songRequestService = songRequestService;
     }
 
     @NotSuspendedUser(message = "User is suspended")
@@ -122,6 +126,20 @@ public class UserController {
         reportService.report(reportRequest, userResult.getUser());
         return ApiResponse.builder()
                 .message("Report successful")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
+    @PostMapping(value = "/song-request",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse requestSong(@Valid @RequestBody SongRequest songRequest,
+                              @AuthenticationPrincipal UserResult userResult) throws Exception {
+        songRequestService.requestSong(songRequest, userResult.getUser());
+        return ApiResponse.builder()
+                .message("Request successful")
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
