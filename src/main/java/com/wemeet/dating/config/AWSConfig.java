@@ -2,12 +2,14 @@ package com.wemeet.dating.config;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
+import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.cloud.aws.mail.simplemail.SimpleEmailServiceMailSender;
 import org.springframework.cloud.aws.messaging.core.NotificationMessagingTemplate;
 import org.springframework.context.annotation.Bean;
@@ -45,6 +47,11 @@ public class AWSConfig {
     @Bean
     public MailSender mailSender(AmazonSimpleEmailService ses) {
         return new SimpleEmailServiceMailSender(ses);
+    }
+
+    @Bean
+    public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {
+        return new SimpleStorageResourceLoader(client);
     }
 
     @Bean
