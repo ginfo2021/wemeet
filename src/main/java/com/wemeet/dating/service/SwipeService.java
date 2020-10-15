@@ -79,7 +79,7 @@ public class SwipeService {
             if (counterSwipe != null && counterSwipe.getType().equals(SwipeType.LIKE)) {
                 response.setMatch(true);
                 //TODO: SEND NOTIFICATION TO MATCHED USER(SWIPEE)
-                pushNotificationService.pushNotification("You have a new match!", "test");
+                pushNotificationService.pushNotification("You have a new match!", "user");
             }
         }
         response.setSwipe(swipe);
