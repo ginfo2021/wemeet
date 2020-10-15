@@ -36,16 +36,18 @@ public class SwipeService {
     private final SwipeRepository swipeRepository;
     private final UserService userService;
     private final UserPreferenceService userPreferenceService;
+    private final PushNotificationService pushNotificationService;
 
 
     @Value("${swipe.suggestion.number}")
     private int wemeetSwipeSuggestionNumber;
 
     @Autowired
-    public SwipeService(SwipeRepository swipeRepository, UserService userService, UserPreferenceService userPreferenceService) {
+    public SwipeService(SwipeRepository swipeRepository, UserService userService, UserPreferenceService userPreferenceService, PushNotificationService pushNotificationService) {
         this.swipeRepository = swipeRepository;
         this.userService = userService;
         this.userPreferenceService = userPreferenceService;
+        this.pushNotificationService = pushNotificationService;
     }
 
 
@@ -77,6 +79,7 @@ public class SwipeService {
             if (counterSwipe != null && counterSwipe.getType().equals(SwipeType.LIKE)) {
                 response.setMatch(true);
                 //TODO: SEND NOTIFICATION TO MATCHED USER(SWIPEE)
+                pushNotificationService.pushNotification("You have a new match!", "user");
             }
         }
         response.setSwipe(swipe);

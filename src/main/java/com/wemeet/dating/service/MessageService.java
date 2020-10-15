@@ -5,19 +5,14 @@ import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.exception.UsersNotMatchedException;
 import com.wemeet.dating.model.entity.Message;
-import com.wemeet.dating.model.entity.Swipe;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.request.MessageRequest;
-import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.MessageResponse;
 import com.wemeet.dating.model.response.PageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,12 +27,14 @@ public class MessageService {
     private final SwipeService swipeService;
     private final UserService userService;
     private final MessageRepository messageRepository;
+    private final PushNotificationService pushNotificationService;
 
     @Autowired
-    public MessageService(SwipeService swipeService, UserService userService, MessageRepository messageRepository) {
+    public MessageService(SwipeService swipeService, UserService userService, MessageRepository messageRepository, PushNotificationService pushNotificationService) {
         this.swipeService = swipeService;
         this.userService = userService;
         this.messageRepository = messageRepository;
+        this.pushNotificationService = pushNotificationService;
     }
 
     public MessageResponse sendMessage(User user, MessageRequest messageRequest) throws Exception {
@@ -67,6 +64,7 @@ public class MessageService {
         message = messageRepository.save(message);
 
         //TODO: SEND NOTIFICATION TO RECEIVER
+        pushNotificationService.pushNotification("You have a new message!", "test");
         return new MessageResponse(message);
 
     }
