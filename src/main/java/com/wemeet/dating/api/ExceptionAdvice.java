@@ -141,6 +141,24 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(UserNotPremiumException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    protected ResponseEntity<Object> handleUserNotPremiumException(UserNotPremiumException ex) {
+        ex.printStackTrace();
+
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.USER_NOT_PREMIUM, ex);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BlockedUserException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    protected ResponseEntity<Object> handleBlockedUserException(BlockedUserException ex) {
+        ex.printStackTrace();
+
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.BLOCKED_USER, ex);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(PreferenceNotSetException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     protected ResponseEntity<Object> handlePreferenceNotSetExceptionException(PreferenceNotSetException ex) {
