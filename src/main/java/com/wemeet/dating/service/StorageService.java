@@ -37,11 +37,9 @@ public class StorageService {
             throw new InvalidFileTypeException("Invalid file found");
         }
 
-        String[] allowedContentTypes = new String[]{"image/jpeg", "image/jpg", "image/png"};
-        List<String> list = Arrays.asList(allowedContentTypes);
-
-        if (!list.contains(request.getFile().getContentType())){
-            throw new InvalidFileTypeException("Invalid file type!");
+        System.out.println("filetyoe"+ request.getFile().getContentType());
+        if (!isSupportedContentType(request.getFile().getContentType())){
+            throw new InvalidFileTypeException("Only PNG or JPG images are allowed!");
         }
 
         String imageUrl = s3Service.putObject(user, request);
@@ -83,6 +81,13 @@ public class StorageService {
                 .builder()
                 .musicUrl(musicUrl)
                 .build();
+    }
+
+
+    private boolean isSupportedContentType(String contentType) {
+        return contentType.equals("image/png")
+                || contentType.equals("image/jpg")
+                || contentType.equals("image/jpeg");
     }
 
 }
