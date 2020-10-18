@@ -1,11 +1,11 @@
 package com.wemeet.dating.service;
 
 import com.wemeet.dating.dao.MessageRepository;
-import com.wemeet.dating.exception.BadRequestException;
-import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
-import com.wemeet.dating.exception.UsersNotMatchedException;
+import com.wemeet.dating.exception.*;
 import com.wemeet.dating.model.entity.Message;
 import com.wemeet.dating.model.entity.User;
+import com.wemeet.dating.model.enums.AccountType;
+import com.wemeet.dating.model.enums.UserType;
 import com.wemeet.dating.model.request.MessageRequest;
 import com.wemeet.dating.model.response.MessageResponse;
 import com.wemeet.dating.model.response.PageResponse;
@@ -25,13 +25,15 @@ public class MessageService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final SwipeService swipeService;
+    private final BlockService blockService;
     private final UserService userService;
     private final MessageRepository messageRepository;
     private final PushNotificationService pushNotificationService;
 
     @Autowired
-    public MessageService(SwipeService swipeService, UserService userService, MessageRepository messageRepository, PushNotificationService pushNotificationService) {
+    public MessageService(SwipeService swipeService, BlockService blockService, UserService userService, MessageRepository messageRepository, PushNotificationService pushNotificationService) {
         this.swipeService = swipeService;
+        this.blockService = blockService;
         this.userService = userService;
         this.messageRepository = messageRepository;
         this.pushNotificationService = pushNotificationService;
@@ -52,9 +54,20 @@ public class MessageService {
             throw new BadRequestException(("User cannot message itself"));
         }
 
+        if (blockService.findByBlockerAndBlocked(user, receiver) != null
+                || blockService.findByBlockerAndBlocked(receiver, user) != null) {
+            throw new BlockedUserException("You have or have been blocked by user");
+        }
+
         if (!swipeService.usersMatch(user, receiver)) {
             throw new UsersNotMatchedException("You can only send messages to matched user");
         }
+
+        if(user.getType().equals(AccountType.FREE)){
+            //throw new UserNotPremiumException("You have used up your messages for the day");
+        }
+
+
         Message message = new Message();
         message.setType(messageRequest.getType());
         message.setSender(user);
