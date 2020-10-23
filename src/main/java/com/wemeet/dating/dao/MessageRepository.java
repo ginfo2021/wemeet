@@ -7,8 +7,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
+import java.util.Date;
+
 public interface MessageRepository extends BaseRepository<Message, Long> {
 
+    long countBySenderAndSentAtBetween(User sender, LocalDateTime dayStart, LocalDateTime dayEnd);
 
     @Query(
             value
