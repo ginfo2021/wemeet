@@ -4,9 +4,11 @@ import com.wemeet.dating.dao.SwipeRepository;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.exception.PreferenceNotSetException;
+import com.wemeet.dating.exception.UserNotPremiumException;
 import com.wemeet.dating.model.entity.Swipe;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.entity.UserPreference;
+import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.model.enums.Gender;
 import com.wemeet.dating.model.enums.SwipeType;
 import com.wemeet.dating.model.request.SwipeRequest;
@@ -65,6 +67,10 @@ public class SwipeService {
         if (swipee.getId().equals(user.getId())) {
             throw new BadRequestException(("User cannot swipe itself"));
         }
+
+        if(user.getType().equals(AccountType.FREE)){
+            //throw new UserNotPremiumException("You have used up your swipes for the day");
+        }
         Swipe swipe = new Swipe();
         swipe.setType(swipeRequest.getType());
         swipe.setSwipee(swipee);
@@ -89,6 +95,10 @@ public class SwipeService {
 
     public Swipe findSwipe(Long id) {
         return swipeRepository.findById(id).orElse(null);
+    }
+
+    public Swipe findBySwiperAndSwipee(User swiper, User swipee) {
+        return swipeRepository.findBySwiperAndSwipee(swiper, swipee);
     }
 
     public PageResponse<UserProfile> getUserMatches(User user, int pageNum, int pageSize) throws Exception {
@@ -205,4 +215,11 @@ public class SwipeService {
         return match;
     }
 
+    public void unSwipe(User swiper, User swipee) {
+        Swipe swipe = findBySwiperAndSwipee(swiper, swipee);
+        if(swipe != null){
+            swipeRepository.delete(swipe);
+        }
+
+    }
 }

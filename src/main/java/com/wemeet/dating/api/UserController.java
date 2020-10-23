@@ -10,10 +10,7 @@ import com.wemeet.dating.model.request.*;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
-import com.wemeet.dating.service.PushNotificationService;
-import com.wemeet.dating.service.ReportService;
-import com.wemeet.dating.service.SongRequestService;
-import com.wemeet.dating.service.UserService;
+import com.wemeet.dating.service.*;
 import com.wemeet.dating.util.validation.constraint.ActiveUser;
 import com.wemeet.dating.util.validation.constraint.NotSuspendedUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +28,7 @@ public class UserController {
 
     private final UserService userService;
     private final ReportService reportService;
+    private final BlockService blockService;
     private final SongRequestService songRequestService;
 
     private final PushNotificationService pushNotificationService;
@@ -39,10 +37,11 @@ public class UserController {
     public UserController(UserService userService,
                           PushNotificationService pushNotificationService,
                           ReportService reportService,
-                          SongRequestService songRequestService) {
+                          BlockService blockService, SongRequestService songRequestService) {
         this.userService = userService;
         this.pushNotificationService = pushNotificationService;
         this.reportService = reportService;
+        this.blockService = blockService;
         this.songRequestService = songRequestService;
     }
 
@@ -141,6 +140,49 @@ public class UserController {
         songRequestService.requestSong(songRequest, userResult.getUser());
         return ApiResponse.builder()
                 .message("Request successful")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
+    @PostMapping(value = "/block",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse block(@RequestParam(value = "userId") Long userId,
+                              @AuthenticationPrincipal UserResult userResult) throws Exception {
+        blockService.block(userId, userResult.getUser());
+        return ApiResponse.builder()
+                .message("Block successful")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
+    @PostMapping(value = "/unblock",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse unblock(@RequestParam(value = "userId") Long userId,
+                               @AuthenticationPrincipal UserResult userResult) throws Exception {
+        blockService.unBlock(userId, userResult.getUser());
+        return ApiResponse.builder()
+                .message("Report successful")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
+    @GetMapping(value = "/blocks", produces = MediaType.APPLICATION_JSON_VALUE)
+
+    public ApiResponse getUserBlocks(@AuthenticationPrincipal UserResult userResult,
+                                      @RequestParam(defaultValue = "0") int pageNum,
+                                      @RequestParam(defaultValue = "10") int pageSize) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Fetched User blocks successfully")
+                .data(blockService.getUserBlocks(userResult.getUser(), pageNum, pageSize))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }

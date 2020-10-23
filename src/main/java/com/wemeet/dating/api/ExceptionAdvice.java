@@ -1,9 +1,14 @@
 package com.wemeet.dating.api;
 
 
+import com.wemeet.dating.dao.ErrorRepository;
 import com.wemeet.dating.exception.*;
+import com.wemeet.dating.model.entity.WeMeetError;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DuplicateKeyException;
@@ -34,6 +39,9 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected String message = "";
     protected String defaultErrorMessage = "An Error Occurred while processing your request  ";
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception ex, @Nullable Object body, HttpHeaders headers, HttpStatus status, WebRequest request) {
@@ -49,7 +57,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
             responseCode = ResponseCode.RESOURCE_NOT_FOUND;
         }
 
-        apiResponse = buildErrorResponse(message, new ArrayList<>(), responseCode, ex);
+        apiResponse = buildErrorResponse(message, new ArrayList<>(), responseCode, ex, status);
 
         return new ResponseEntity<>(apiResponse, status);
 
@@ -71,7 +79,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         } else {
             message = errors.get(0);
         }
-        apiResponse = buildErrorResponse(message, errors, ResponseCode.VALIDATION_ERROR, ex);
+        apiResponse = buildErrorResponse(message, errors, ResponseCode.VALIDATION_ERROR, ex, HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -81,7 +89,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleInvalidJwtException(InvalidJwtAuthenticationException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.INVALID_TOKEN, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.INVALID_TOKEN, ex, HttpStatus.UNAUTHORIZED);
         return new ResponseEntity<>(apiResponse, HttpStatus.UNAUTHORIZED);
     }
 
@@ -90,7 +98,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleInvalidCredentialException(InvalidCredentialException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.INVALID_USERNAME_PASSWORD, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.INVALID_USERNAME_PASSWORD, ex, HttpStatus.UNAUTHORIZED);
         return new ResponseEntity<>(apiResponse, HttpStatus.UNAUTHORIZED);
 
     }
@@ -101,7 +109,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleDuplicateKeyExceptionException(DuplicateKeyException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.ERROR, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.ERROR, ex, HttpStatus.CONFLICT);
         return new ResponseEntity<>(apiResponse, HttpStatus.CONFLICT);
     }
 
@@ -110,7 +118,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleEntityNotFoundExceptionException(EntityNotFoundException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.ENTITY_NOT_FOUND, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.ENTITY_NOT_FOUND, ex, HttpStatus.NOT_FOUND);
         return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
     }
 
@@ -119,7 +127,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleInactiveUserExceptionException(InactiveUserException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.USER_NOT_VERIFIED, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.USER_NOT_VERIFIED, ex, HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -128,7 +136,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleBadRequestExceptionException(BadRequestException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.ERROR, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.ERROR, ex, HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -137,7 +145,25 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleUsersNotMatchedException(UsersNotMatchedException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.USERS_NOT_MATCHED, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.USERS_NOT_MATCHED, ex, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UserNotPremiumException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    protected ResponseEntity<Object> handleUserNotPremiumException(UserNotPremiumException ex) {
+        ex.printStackTrace();
+
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.USER_NOT_PREMIUM, ex, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BlockedUserException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    protected ResponseEntity<Object> handleBlockedUserException(BlockedUserException ex) {
+        ex.printStackTrace();
+
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.BLOCKED_USER, ex, HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -146,7 +172,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handlePreferenceNotSetExceptionException(PreferenceNotSetException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.PREFERENCE_NOT_SET, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.PREFERENCE_NOT_SET, ex, HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -155,7 +181,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleInvalidFileTypeException(InvalidFileTypeException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.ERROR, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.ERROR, ex, HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -164,7 +190,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleConstraintViolationExceptionException(ConstraintViolationException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.VALIDATION_ERROR, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.VALIDATION_ERROR, ex, HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -174,7 +200,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         ex.printStackTrace();
 
         String message = (ex.getMessage() != null && StringUtils.hasText(ex.getMessage())) ? ex.getMessage() : defaultErrorMessage;
-        apiResponse = buildErrorResponse(message, new ArrayList<>(), ResponseCode.ERROR, ex);
+        apiResponse = buildErrorResponse(message, new ArrayList<>(), ResponseCode.ERROR, ex, HttpStatus.INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
@@ -184,7 +210,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleResourceNotFoundExceptionException(ResourceNotFoundException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.RESOURCE_NOT_FOUND, ex);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.RESOURCE_NOT_FOUND, ex, HttpStatus.NOT_FOUND);
         return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
     }
 
@@ -194,18 +220,36 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleException(Exception ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(defaultErrorMessage, new ArrayList<>(), ResponseCode.ERROR, ex);
+        apiResponse = buildErrorResponse(defaultErrorMessage, new ArrayList<>(), ResponseCode.ERROR, ex, HttpStatus.INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
 
 
-    private ApiResponse buildErrorResponse(String message, List<String> errorList, ResponseCode responseCode, Exception exception) {
+    private ApiResponse buildErrorResponse(String message, List<String> errorList, ResponseCode responseCode, Exception exception, HttpStatus httpStatus) {
+        String logId = UUID.randomUUID().toString();
+        try {
+            ErrorRepository errorRepository = applicationContext.getBean("errorRepository", ErrorRepository.class);
+            errorRepository.save(
+
+                    WeMeetError.builder()
+                            .logId(logId)
+                            .message(message)
+                            .responseCode(responseCode)
+                            .httpResponseCode(httpStatus.value())
+                            .stackTrace(ExceptionUtils.getStackTrace(exception))
+                            .build()
+            );
+
+
+        } catch (Exception ex) {
+
+        }
 
         return ApiResponse.builder()
                 .message(message)
                 .responseCode(responseCode)
-                .logId(UUID.randomUUID().toString())
+                .logId(logId)
                 .errors(errorList)
                 .build();
     }
