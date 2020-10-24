@@ -46,7 +46,6 @@ dependencies {
     compile "com.amazonaws:aws-java-sdk-ses:1.11.505"
 
     compile "com.amazonaws:aws-java-sdk-bom:1.11.327"
-
     implementation 'com.sendgrid:sendgrid-java:4.6.7'
     implementation "org.flywaydb:flyway-core:5.2.4"
     implementation "mysql:mysql-connector-java"

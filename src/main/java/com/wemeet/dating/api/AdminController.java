@@ -2,6 +2,7 @@ package com.wemeet.dating.api;
 
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.enums.DeleteType;
+import com.wemeet.dating.model.request.CreatePlanRequest;
 import com.wemeet.dating.model.request.CreatePlaylistRequest;
 import com.wemeet.dating.model.request.MusicUploadRequest;
 import com.wemeet.dating.model.response.ApiResponse;
@@ -28,8 +29,7 @@ public class AdminController {
     private final DashboardService dashboardService;
     private final MusicService musicService;
     private final ResyncUtil resyncUtil;
-
-
+    private final PaymentService paymentService;
 
     @Autowired
     public AdminController(
@@ -38,13 +38,16 @@ public class AdminController {
             SongRequestService songRequestService,
             DashboardService dashboardService,
             StorageService storageService,
-            MusicService musicService, ResyncUtil resyncUtil) {
+            MusicService musicService,
+            PaymentService paymentService,
+            ResyncUtil resyncUtil) {
         this.userService = userService;
         this.reportService = reportService;
         this.songRequestService = songRequestService;
         this.dashboardService = dashboardService;
         this.storageService = storageService;
         this.musicService = musicService;
+        this.paymentService = paymentService;
         this.resyncUtil = resyncUtil;
     }
 
@@ -220,6 +223,33 @@ public class AdminController {
 
         return ApiResponse.builder()
                 .message("Playlist created successfully")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+
+    @AdminUser(message = "Current User Not Admin")
+    @GetMapping(value = "/plans", produces = MediaType.APPLICATION_JSON_VALUE)
+
+    public ApiResponse getPlans(@AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Plans retrieved successfully")
+                .data(paymentService.getPlans(userResult.getUser()))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+
+    @AdminUser(message = "Current User Not Admin")
+    @PostMapping(value = "/plan/create", produces = MediaType.APPLICATION_JSON_VALUE)
+
+    public ApiResponse createPlan(@AuthenticationPrincipal UserResult userResult,
+                                      @RequestBody CreatePlanRequest request) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Plan created successfully")
+                .data(paymentService.createPlan(userResult.getUser(), request))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
