@@ -8,6 +8,7 @@ import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
 import com.wemeet.dating.service.*;
+import com.wemeet.dating.util.ResyncUtil;
 import com.wemeet.dating.util.validation.constraint.AdminUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -26,6 +27,7 @@ public class AdminController {
     private final StorageService storageService;
     private final DashboardService dashboardService;
     private final MusicService musicService;
+    private final ResyncUtil resyncUtil;
 
 
 
@@ -36,13 +38,26 @@ public class AdminController {
             SongRequestService songRequestService,
             DashboardService dashboardService,
             StorageService storageService,
-            MusicService musicService) {
+            MusicService musicService, ResyncUtil resyncUtil) {
         this.userService = userService;
         this.reportService = reportService;
         this.songRequestService = songRequestService;
         this.dashboardService = dashboardService;
         this.storageService = storageService;
         this.musicService = musicService;
+        this.resyncUtil = resyncUtil;
+    }
+
+    @AdminUser(message = "Current User Not Admin")
+    @GetMapping(value = "/resync", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse resync(@AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        resyncUtil.resyncDataBaseProperties();
+        resyncUtil.resyncConfigProperties();
+        return ApiResponse.builder()
+                .message("Re-synchronised successfully")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
     }
 
     @AdminUser(message = "Current User Not Admin")

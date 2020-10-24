@@ -1,5 +1,6 @@
 package com.wemeet.dating.service;
 
+import com.wemeet.dating.config.WemeetConfig;
 import com.wemeet.dating.dao.SwipeRepository;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
@@ -15,11 +16,11 @@ import com.wemeet.dating.model.request.SwipeRequest;
 import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.PageResponse;
 import com.wemeet.dating.model.response.SwipeResponse;
+import com.wemeet.dating.util.DateUtil;
 import com.wemeet.dating.util.LocationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 public class SwipeService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final WemeetConfig wemeetConfig;
 
     private final SwipeRepository swipeRepository;
     private final UserService userService;
@@ -41,11 +44,9 @@ public class SwipeService {
     private final PushNotificationService pushNotificationService;
 
 
-    @Value("${swipe.suggestion.number}")
-    private int wemeetSwipeSuggestionNumber;
-
     @Autowired
-    public SwipeService(SwipeRepository swipeRepository, UserService userService, UserPreferenceService userPreferenceService, PushNotificationService pushNotificationService) {
+    public SwipeService(WemeetConfig wemeetConfig, SwipeRepository swipeRepository, UserService userService, UserPreferenceService userPreferenceService, PushNotificationService pushNotificationService) {
+        this.wemeetConfig = wemeetConfig;
         this.swipeRepository = swipeRepository;
         this.userService = userService;
         this.userPreferenceService = userPreferenceService;
@@ -68,9 +69,7 @@ public class SwipeService {
             throw new BadRequestException(("User cannot swipe itself"));
         }
 
-        if(user.getType().equals(AccountType.FREE)){
-            //throw new UserNotPremiumException("You have used up your swipes for the day");
-        }
+        validateUserTypeFeatureLimit(user);
         Swipe swipe = new Swipe();
         swipe.setType(swipeRequest.getType());
         swipe.setSwipee(swipee);
@@ -84,13 +83,27 @@ public class SwipeService {
             Swipe counterSwipe = swipeRepository.findBySwiperAndSwipee(swipee, user);
             if (counterSwipe != null && counterSwipe.getType().equals(SwipeType.LIKE)) {
                 response.setMatch(true);
-                //TODO: SEND NOTIFICATION TO MATCHED USER(SWIPEE)
-                pushNotificationService.pushNotification("You have a new match!", "user");
+                try {
+                    pushNotificationService.pushNotification("You have a new match!", "user");
+                } catch (Exception ex) {
+                    logger.error("Unable to send message notification", ex);
+                }
             }
         }
         response.setSwipe(swipe);
 
         return response;
+    }
+
+    private void validateUserTypeFeatureLimit(User user) throws UserNotPremiumException {
+        if (user.getType().equals(AccountType.FREE)) {
+            Date now = new Date();
+            if (swipeRepository.countBySwiperAndDateCreatedBetween(user, DateUtil.getStartofDay(now), DateUtil.getEndofDay(now))
+                    >= wemeetConfig.getWemeetDefaultSwipeLimit()) {
+                throw new UserNotPremiumException("You have used up your swipes for the day");
+            }
+
+        }
     }
 
     public Swipe findSwipe(Long id) {
@@ -145,7 +158,7 @@ public class SwipeService {
         }
 
         List<BigInteger> swipeSuggestions =
-                swipeRepository.findSwipeSuggestions(user.getId(), userPreference.getGenderPreference().stream().map(Gender::getName).collect(Collectors.toList()), wemeetSwipeSuggestionNumber);
+                swipeRepository.findSwipeSuggestions(user.getId(), userPreference.getGenderPreference().stream().map(Gender::getName).collect(Collectors.toList()), wemeetConfig.getWemeetSwipeSuggestionNumber());
 
         List<UserProfile> finalUserProfiles = userProfiles;
         swipeSuggestions.forEach(a -> {
@@ -217,7 +230,7 @@ public class SwipeService {
 
     public void unSwipe(User swiper, User swipee) {
         Swipe swipe = findBySwiperAndSwipee(swiper, swipee);
-        if(swipe != null){
+        if (swipe != null) {
             swipeRepository.delete(swipe);
         }
 
