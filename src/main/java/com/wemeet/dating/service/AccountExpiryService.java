@@ -39,6 +39,8 @@ public class AccountExpiryService {
             User user = userService.findById(accountExpiry.getUser().getId());
             user.setType(AccountType.FREE);
             userService.createOrUpdateUser(user);
+            accountExpiry.setExpired(true);
+            accountExpiryRepository.save(accountExpiry);
         });
 
     }
