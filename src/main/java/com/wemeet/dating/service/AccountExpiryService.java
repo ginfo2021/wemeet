@@ -5,6 +5,8 @@ import com.wemeet.dating.model.entity.AccountExpiry;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.util.DateUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -23,6 +25,8 @@ public class AccountExpiryService {
     private final AccountExpiryRepository accountExpiryRepository;
     private final UserService userService;
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     @Autowired
     public AccountExpiryService(AccountExpiryRepository accountExpiryRepository, UserService userService) {
         this.accountExpiryRepository = accountExpiryRepository;
@@ -31,18 +35,24 @@ public class AccountExpiryService {
 
 
     @Scheduled(cron = "${wemeet.cron.default.expression}")
-    @Transactional
     @Async
     public void getDailyExpiredUsersAndDowngrade() {
         List<AccountExpiry> accountsToExpiry = accountExpiryRepository.findByExpiredIsFalseAndExpiresAtBefore(DateUtil.getLocalStartofDay(new Date()));
-        accountsToExpiry.forEach(accountExpiry -> {
+        accountsToExpiry.forEach(this::downgradeUser);
+
+    }
+
+    @Transactional
+    private void downgradeUser(AccountExpiry accountExpiry) {
+        try {
             User user = userService.findById(accountExpiry.getUser().getId());
             user.setType(AccountType.FREE);
             userService.createOrUpdateUser(user);
             accountExpiry.setExpired(true);
             accountExpiryRepository.save(accountExpiry);
-        });
-
+        } catch (Exception ex) {
+            logger.error("Unable to downgrade User", ex);
+        }
     }
 
 }
