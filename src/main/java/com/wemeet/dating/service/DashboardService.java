@@ -16,6 +16,8 @@ public class DashboardService {
                 .deactivatedUsersCount(getTotalDeactivatedUsers())
                 .freeAccounts(getTotalFreeAccounts())
                 .premiumAccounts(getTotalPremiumAccounts())
+                .femaleUsersCount(getTotalFemaleUsers())
+                .maleUsersCount(getTotalMaleUsers())
                 .build();
     }
 
@@ -34,4 +36,13 @@ public class DashboardService {
     private long getTotalPremiumAccounts(){
         return this.userService.getTotalPremiumAccountsCount();
     }
+
+    private long getTotalMaleUsers(){
+        return this.userService.getTotalMaleUsersCount();
+    }
+
+    private long getTotalFemaleUsers(){
+        return this.userService.getTotalFemaleUsersCount();
+    }
+
 }

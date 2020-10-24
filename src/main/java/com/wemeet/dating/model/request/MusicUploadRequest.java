@@ -10,6 +10,9 @@ import javax.validation.constraints.NotNull;
 public class MusicUploadRequest {
     @NotNull
     private FileType fileType;
+
+    private MusicCreateRequest musicCreateRequest;
+
     @NotNull
     private MultipartFile file;
 }

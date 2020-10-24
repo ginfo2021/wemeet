@@ -155,12 +155,25 @@ public class AdminController {
                 .build();
     }
 
+    @AdminUser(message = "Current User Not Admin")
+    @GetMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse getAllUsers(@AuthenticationPrincipal UserResult userResult,
+                                   @RequestParam(required = false) String name,
+                                   @RequestParam(defaultValue = "0") int pageNum,
+                                   @RequestParam(defaultValue = "10") int pageSize) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Fetched  successfully")
+                .data(userService.getAllUsers(name, pageNum, pageSize))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
 
     @AdminUser(message = "Current User Not Admin")
     @PostMapping(value = "/music/upload", produces = MediaType.APPLICATION_JSON_VALUE)
 
     public ApiResponse uploadMusic(@AuthenticationPrincipal UserResult userResult,
-                                   @RequestBody MusicUploadRequest request) throws Exception {
+                                   MusicUploadRequest request) throws Exception {
 
         return ApiResponse.builder()
                 .message("Uploaded  successfully")

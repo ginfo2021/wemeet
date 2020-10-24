@@ -8,6 +8,7 @@ import com.wemeet.dating.model.entity.Music;
 import com.wemeet.dating.model.entity.Playlist;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.request.CreatePlaylistRequest;
+import com.wemeet.dating.model.request.MusicCreateRequest;
 import com.wemeet.dating.model.response.PageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -68,5 +69,15 @@ public class MusicService {
         playlist.setDeleted(false);
         playlist.setSongId(music);
         playlistRepository.save(playlist);
+    }
+
+    public void createMusic(MusicCreateRequest request) throws  Exception{
+        Music music = new Music();
+
+        request.setArtist(request.getArtist());
+        request.setSongUrl(request.getSongUrl());
+        request.setTitle(request.getTitle());
+
+        musicRepository.save(music);
     }
 }

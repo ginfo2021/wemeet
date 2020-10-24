@@ -287,4 +287,30 @@ public class UserService {
         return count;
     }
 
+    @Transactional(readOnly = true)
+    public PageResponse<User> getAllUsers(String name, int pageNum, int pageSize){
+        if (name != null){
+            Page<User> userList = userRepository.getAllUsersSearch(name, PageRequest.of(pageNum, pageSize));
+            PageResponse<User> userPage = new PageResponse<>(userList);
+
+            return userPage;
+        }
+
+        Page<User> userList = userRepository.getAllUsers(PageRequest.of(pageNum, pageSize));
+        PageResponse<User> userPage = new PageResponse<>(userList);
+
+        return userPage;
+    }
+
+    public long getTotalMaleUsersCount(){
+        long count = userRepository.getTotalMaleUsersCount();
+        return count;
+    }
+
+    public long getTotalFemaleUsersCount(){
+        long count = userRepository.getTotalFemaleUsersCount();
+        return count;
+    }
+
+
 }

@@ -10,4 +10,6 @@ public class DashboardResponse {
     public long deactivatedUsersCount;
     public long freeAccounts;
     public long premiumAccounts;
+    public long maleUsersCount;
+    public long femaleUsersCount;
 }

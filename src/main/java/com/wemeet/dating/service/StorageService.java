@@ -20,6 +20,7 @@ public class StorageService {
     private S3Service s3Service;
     private UserService userService;
     private UserImageService userImageService;
+    private MusicService musicService;
 
     @Autowired
     public StorageService(
