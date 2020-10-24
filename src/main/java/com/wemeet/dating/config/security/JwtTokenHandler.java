@@ -1,6 +1,7 @@
 package com.wemeet.dating.config.security;
 
 
+import com.wemeet.dating.config.WemeetConfig;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.TokenInfo;
 import com.wemeet.dating.model.entity.AdminUser;
@@ -39,8 +40,9 @@ public class JwtTokenHandler {
     @Value("${security.jwt.token.secret}")
     private String secretKey;
     private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    @Autowired
+    WemeetConfig config;
 
-    @Value("${security.jwt.token.expire.hour}")
     private long validityInMilliseconds;
 
     @Autowired
@@ -53,7 +55,7 @@ public class JwtTokenHandler {
     @PostConstruct
     protected void init() {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
-        validityInMilliseconds = validityInMilliseconds * 3600000;
+        validityInMilliseconds = config.getWemeetJwtvalidityInMilliseconds() * 3600000;
     }
 
     public String createToken(User user, String role) {

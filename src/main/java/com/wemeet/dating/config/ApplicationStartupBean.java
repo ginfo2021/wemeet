@@ -1,4 +1,4 @@
-package com.wemeet.dating.config.security;
+package com.wemeet.dating.config;
 
 import com.wemeet.dating.model.entity.AdminUser;
 import com.wemeet.dating.model.entity.User;
@@ -29,6 +29,7 @@ public class ApplicationStartupBean {
 
     @EventListener
     public void onApplicationEvent(ApplicationReadyEvent event) {
+        logger.error("WEMEET APPLICATION HAS STARTED");
 
         AdminUser adminUser = adminUserService.findUserByEmail(defaultUser);
         if (adminUser == null || adminUser.getId() <= 0) {

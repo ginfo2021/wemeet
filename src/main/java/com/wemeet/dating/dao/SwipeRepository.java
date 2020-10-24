@@ -10,11 +10,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.List;
 
 public interface SwipeRepository extends BaseRepository<Swipe, Long> {
 
     Swipe findBySwiperAndSwipee(User swiper, User swipee);
+
+    long countBySwiperAndDateCreatedBetween(User swiper, Date dayStart, Date dayEnd);
 
     @Query(
             value
@@ -49,7 +52,7 @@ public interface SwipeRepository extends BaseRepository<Swipe, Long> {
                     "AND U.gender IN :genderPreferenceList " +
                     "HAVING age >= :minAge AND age <= :maxAge ",
             nativeQuery = true
-)
+    )
     List<UserProfile> findSwipeSuggestions(Long userId, List<String> genderPreferenceList, int minAge, int maxAge);
 
     @Query(
