@@ -15,10 +15,7 @@ public class PaystackCustomer {
     private BigInteger id;
     private String first_name;
     private String last_name;
-    @NotNull
     private String email;
-
-    @NotNull
     private String customer_code;
     private String phone;
     private String risk_action;

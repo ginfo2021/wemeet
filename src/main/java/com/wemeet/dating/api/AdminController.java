@@ -230,7 +230,6 @@ public class AdminController {
 
     @AdminUser(message = "Current User Not Admin")
     @GetMapping(value = "/plans", produces = MediaType.APPLICATION_JSON_VALUE)
-
     public ApiResponse getPlans(@AuthenticationPrincipal UserResult userResult) throws Exception {
 
         return ApiResponse.builder()
@@ -243,7 +242,6 @@ public class AdminController {
 
     @AdminUser(message = "Current User Not Admin")
     @PostMapping(value = "/plan/create", produces = MediaType.APPLICATION_JSON_VALUE)
-
     public ApiResponse createPlan(@AuthenticationPrincipal UserResult userResult,
                                       @RequestBody CreatePlanRequest request) throws Exception {
 
@@ -253,6 +251,5 @@ public class AdminController {
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
-
 
 }

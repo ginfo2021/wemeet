@@ -6,19 +6,19 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @Builder
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PaystackPlan {
-    private String name;
-    private String plan_code;
-    private Long amount;
-    private String interval;
-    private String currency;
-    private Long id;
+public class PaymentWebhookRequest {
+    @NotNull
+    private String event;
 
-    public PaystackPlan(){
+    private Object data;
+
+    public PaymentWebhookRequest() {
     }
 }

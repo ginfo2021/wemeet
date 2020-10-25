@@ -1,11 +1,9 @@
 package com.wemeet.dating.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
-import java.math.BigInteger;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -27,19 +25,14 @@ public class Subscription {
 
     private int quantity;
 
-    private BigInteger amount;
+    private Long amount;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @JsonIgnore
     @Column(nullable = false)
-    private Date purchased;
+    private LocalDateTime purchased;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @JsonIgnore
     @Column(nullable = false)
-    private Date started;
+    private LocalDateTime started;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @JsonIgnore
     @Column(nullable = false)
-    private Date next_payment_date;}
+    private LocalDateTime next_payment_date;
+}

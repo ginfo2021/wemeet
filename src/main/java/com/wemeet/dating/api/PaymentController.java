@@ -1,11 +1,14 @@
 package com.wemeet.dating.api;
 
 import com.wemeet.dating.model.request.PaymentRequest;
+import com.wemeet.dating.model.request.PaymentWebhookRequest;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.user.UserResult;
 import com.wemeet.dating.service.PaymentService;
 import com.wemeet.dating.util.validation.constraint.ActiveUser;
 import com.wemeet.dating.util.validation.constraint.NotSuspendedUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,23 +23,32 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    @PostMapping("/webhook")
-    public void callback(){
+    Logger logger = LoggerFactory.getLogger(PaymentController.class);
+
+    @PostMapping(value = "/webhook",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public void callback(@RequestHeader(value = "x-paystack-signature") String paystackSignature, @RequestBody PaymentWebhookRequest webhookRequest){
         //validate request sender - use paystack signature
+        try {
+            paymentService.handleCallback(paystackSignature, webhookRequest);
+        }catch (Exception ex){
+            logger.error("Error receiving webhook request", ex);
+        }
 
     }
 
     @NotSuspendedUser(message = "User is suspended")
     @ActiveUser(message = "User not active")
-    @PostMapping(value = "/init",
+    @PostMapping(value = "/upgrade",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse upgradePlan(
             @AuthenticationPrincipal UserResult userResult,
             @RequestBody PaymentRequest request) throws Exception{
         return ApiResponse.builder()
-                .message("Payment Successful")
-                .data(paymentService.upgradePlan(userResult.getUser(), request))
+                .message("Upgrade Successful")
+                .data(paymentService.upgradeUserPlan(userResult.getUser(), request))
                 .build();
     }
 
@@ -66,6 +78,5 @@ public class PaymentController {
                 .data(paymentService.getPlans(userResult.getUser()))
                 .build();
     }
-
 
 }
