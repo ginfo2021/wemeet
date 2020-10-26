@@ -9,10 +9,6 @@ plugins {
     id 'com.palantir.docker' version '0.22.1'
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '6.3' //version required
-}
-
 docker {
     name = "wemeetbackend"
     copySpec.from("build").into("build")
