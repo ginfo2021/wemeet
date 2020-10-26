@@ -31,6 +31,9 @@ phases:
       - echo Building the Docker image...
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
       - docker images -a
+      - echo Writing image definitions file...
+      - printf '[{"name":"wemeetbackend","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > imagedefinitions.json  
+      
   post_build:
     commands:
       - echo Build completed on `date`
@@ -39,4 +42,5 @@ phases:
 artifacts:
   files:
     - build/libs/wemeet.jar
+    - imagedefinitions.json
 
