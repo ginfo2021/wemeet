@@ -8,7 +8,7 @@ plugins {
 
 
 docker {
-    name = "wemeet"
+    name = "wemeetbackend"
     copySpec.from("build").into("build")
     buildArgs(['JAR_FILE': "build/libs/wemeet.jar"])
     setDockerfile(file("Dockerfile"))
