@@ -1,7 +1,10 @@
 FROM java:openjdk-8-jre
-ARG JAR_FILE=build/libs/wemeetbackend.jar
+VOLUME /tmp
+RUN ls
+ARG JAR_FILE
 ADD ${JAR_FILE} app.jar
 RUN ls
 EXPOSE 4050
+# RUN sh -c 'touch /app.jar'
 ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-Dserver.port=$PORT", "-jar","/app.jar"]
 
