@@ -10,7 +10,6 @@ phases:
   install:
     commands: 
       # installation
-      - apt-get update -y
       - apt-get install -y gradle-6.3.0
     runtime-versions:
       docker: 18
