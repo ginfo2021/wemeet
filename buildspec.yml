@@ -20,7 +20,6 @@ phases:
       - printenv
       - docker --version
       - gradle --version
-      - gradle wrapper --gradle-version 6.3
       - ./gradlew build
       - gradle docker
       - echo Building the Docker image...
