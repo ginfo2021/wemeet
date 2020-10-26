@@ -12,7 +12,7 @@ phases:
       # installation
 #       - add-apt-repository ppa:cwchien/gradle
 #       - apt-get update
-#       - apt upgrade -y gradle
+      - apt upgrade -y gradle
     runtime-versions:
       docker: 18
   pre_build:
