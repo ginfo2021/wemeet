@@ -1,53 +1,38 @@
 package com.wemeet.dating.config;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
-import org.springframework.cloud.aws.mail.simplemail.SimpleEmailServiceMailSender;
 import org.springframework.cloud.aws.messaging.core.NotificationMessagingTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.mail.MailSender;
 
 
 @Configuration
 public class AWSConfig {
 
     @Bean
-    public AmazonSimpleEmailService amazonSimpleEmailService(AWSCredentialsProvider credentialsProvider) {
-        return AmazonSimpleEmailServiceClientBuilder.standard()
-                .withCredentials(credentialsProvider)
-                .withRegion(Regions.EU_WEST_1).build();
-    }
-
-    @Bean
-    public AmazonSNS amazonSNS (AWSCredentialsProvider credentialsProvider){
+    public AmazonSNS amazonSNS (){
         return AmazonSNSClientBuilder.standard()
-                .withCredentials(credentialsProvider)
+                .withCredentials(new DefaultAWSCredentialsProviderChain())
                 .withRegion(Regions.EU_WEST_1).build();
     }
 
     @Bean
     @Primary
-    public AmazonSQSAsync amazonSQS (AWSCredentialsProvider credentialsProvider){
+    public AmazonSQSAsync amazonSQS (){
         return AmazonSQSAsyncClientBuilder.standard()
-                .withCredentials(credentialsProvider)
+                .withCredentials(new DefaultAWSCredentialsProviderChain())
                 .withRegion(Regions.EU_WEST_1).build();
     }
 
-
-    @Bean
-    public MailSender mailSender(AmazonSimpleEmailService ses) {
-        return new SimpleEmailServiceMailSender(ses);
-    }
 
     @Bean
     public SimpleStorageResourceLoader simpleStorageResourceLoader(AmazonS3 client) {
@@ -58,5 +43,11 @@ public class AWSConfig {
     public NotificationMessagingTemplate notificationMessagingTemplate(
             AmazonSNS amazonSNS) {
         return new NotificationMessagingTemplate(amazonSNS);
+    }
+
+    @Bean
+    @Primary
+    public AWSCredentialsProvider awsCredentialsProvider() {
+        return new DefaultAWSCredentialsProviderChain();
     }
 }
