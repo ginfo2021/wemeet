@@ -2,10 +2,7 @@ package com.wemeet.dating.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wemeet.dating.api.PaymentController;
-import com.wemeet.dating.dao.PlanRepository;
-import com.wemeet.dating.dao.SubscriptionRepository;
-import com.wemeet.dating.dao.TransactionRepository;
-import com.wemeet.dating.dao.WebhookRepository;
+import com.wemeet.dating.dao.*;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.entity.*;
@@ -31,18 +28,20 @@ public class PaymentService {
     private final TransactionRepository transactionRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final WebhookRepository webhookRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
 
     Logger logger = LoggerFactory.getLogger(PaymentController.class);
 
-    public PaymentService(PaystackService paystackService, PlanRepository planRepository, TransactionRepository transactionRepository, SubscriptionRepository subscriptionRepository, WebhookRepository webhookRepository) {
+    public PaymentService(PaystackService paystackService, PlanRepository planRepository, TransactionRepository transactionRepository, SubscriptionRepository subscriptionRepository, WebhookRepository webhookRepository, UserRepository userRepository) {
         this.paystackService = paystackService;
         this.planRepository = planRepository;
         this.transactionRepository = transactionRepository;
         this.subscriptionRepository = subscriptionRepository;
         this.webhookRepository = webhookRepository;
+        this.userRepository = userRepository;
     }
 
     public PaystackPlan createPlan(User user, CreatePlanRequest request) throws Exception{
@@ -151,10 +150,10 @@ public class PaymentService {
                     processChargeSuccess(webhook, request);
                     break;
                 case "subscription.disable":
-                    processSubscriptionDisabled(webhook, request);
+                    processSubscription(webhook, request);
                     break;
                 case "subscription.create":
-                    processSubscriptionCreated(webhook, request);
+                    processSubscription(webhook, request);
                     break;
                 case "invoice.failed":
                     processInvoiceFailed(webhook, request);
@@ -169,12 +168,7 @@ public class PaymentService {
     }
 
     private void processInvoiceFailed(Webhook webhook, PaymentWebhookRequest request) {
-    }
-
-    private void processSubscriptionCreated(Webhook webhook, PaymentWebhookRequest request) {
-    }
-
-    private void processSubscriptionDisabled(Webhook webhook, PaymentWebhookRequest request) {
+        logger.info("webhook -  paystack - InvoiceFailed", request);
     }
 
     private void processChargeSuccess(Webhook webhook, PaymentWebhookRequest request) {
@@ -194,20 +188,43 @@ public class PaymentService {
     }
 
 
-    private Subscription createSubscription(User user, PaymentStatusResponse response){
+    private void processSubscription(Webhook webhook, PaymentWebhookRequest request){
+
+        PaystackSubscription paystackSubscription = objectMapper.convertValue(request.getData(), PaystackSubscription.class);
+
+        User user = userRepository.findByEmailAndDeletedIsFalse(paystackSubscription.getCustomer().getEmail());
         Subscription subscription = subscriptionRepository.findByUser(user);
 
         if (subscription == null){
             subscription = new Subscription();
+            subscription.setAmount(paystackSubscription.getAmount());
+            subscription.setPlan_code(paystackSubscription.getPlan().getPlan_code());
+            subscription.setPurchased(LocalDateTime.parse(paystackSubscription.getCreated_at()));
+            subscription.setUser(user);
+            subscription.setQuantity(1);
+            subscription.setCron_expression(paystackSubscription.getCron_exxpression());
+            subscription.setStarted(LocalDateTime.parse(paystackSubscription.getCreated_at()));
+            subscription.setNext_payment_date(LocalDateTime.parse(paystackSubscription.getNext_payment_date()));
             subscriptionRepository.save(subscription);
-            return subscription;
+
+            webhook.setCompleted(true);
+            webhookRepository.save(webhook);
+
         }
 
-        subscription.setAmount(response.getAmount());
-        subscription.setPlan_code(response.getPaystackPlan().getPlan_code());
-        subscription.setPurchased(LocalDateTime.parse(response.getPaid_at()));
+        subscription.setAmount(paystackSubscription.getAmount());
+        subscription.setPlan_code(paystackSubscription.getPlan().getPlan_code());
+        subscription.setPurchased(LocalDateTime.parse(paystackSubscription.getCreated_at()));
         subscription.setUser(user);
-        return subscription;
+        subscription.setQuantity(1);
+        subscription.setCron_expression(paystackSubscription.getCron_exxpression());
+        subscription.setStarted(LocalDateTime.parse(paystackSubscription.getCreated_at()));
+        subscription.setNext_payment_date(LocalDateTime.parse(paystackSubscription.getNext_payment_date()));
+        subscriptionRepository.save(subscription);
+
+        webhook.setCompleted(true);
+        webhookRepository.save(webhook);
+
     }
 
 }
