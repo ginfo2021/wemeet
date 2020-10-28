@@ -57,6 +57,7 @@ public class PaystackService {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set("Authorization", "Bearer "+ config.getPaystackKey());
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        httpHeaders.set("User-Agent", "devwemeetagent");
         return httpHeaders;
     };
 
