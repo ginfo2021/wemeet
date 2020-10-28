@@ -18,4 +18,8 @@ public class DeletedUserService {
     public DeletedUser createDeletedUser(DeletedUser deletedUser) {
         return deletedUserRepository.save(deletedUser);
     }
+
+    public Long countAll(){
+        return deletedUserRepository.count();
+    }
 }

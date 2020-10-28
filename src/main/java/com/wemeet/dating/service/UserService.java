@@ -8,6 +8,7 @@ import com.wemeet.dating.model.entity.DeletedUser;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.entity.UserImage;
 import com.wemeet.dating.model.entity.UserPreference;
+import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.model.enums.DeleteType;
 import com.wemeet.dating.model.request.UserImageRequest;
 import com.wemeet.dating.model.request.UserLocationRequest;
@@ -265,26 +266,22 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public long getUsersCount(){
-        long count = userRepository.count();
-        return count;
+        return userRepository.countByDeletedFalse();
     }
 
     @Transactional(readOnly = true)
     public long getTotalDeactivatedUsersCount(){
-        long count = userRepository.getDeactivatedUsersCount();
-        return count;
+        return userRepository.countByActiveFalse();
     }
 
     @Transactional(readOnly = true)
     public long getTotalFreeAccountsCount(){
-        long count = userRepository.getFreeUsersCount();
-        return count;
+        return userRepository.countByType(AccountType.FREE);
     }
 
     @Transactional(readOnly = true)
     public long getTotalPremiumAccountsCount(){
-        long count = userRepository.getPremiumUsersCount();
-        return count;
+        return userRepository.countByType(AccountType.PREMIUM);
     }
 
     @Transactional(readOnly = true)
@@ -303,13 +300,11 @@ public class UserService {
     }
 
     public long getTotalMaleUsersCount(){
-        long count = userRepository.getTotalMaleUsersCount();
-        return count;
+        return userRepository.getMaleUsersCount();
     }
 
     public long getTotalFemaleUsersCount(){
-        long count = userRepository.getTotalFemaleUsersCount();
-        return count;
+        return userRepository.getFemaleUsersCount();
     }
 
 
