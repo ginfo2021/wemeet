@@ -27,6 +27,8 @@ public class Subscription {
 
     private Long amount;
 
+    private boolean active;
+
     @Column(nullable = false)
     private LocalDateTime purchased;
 

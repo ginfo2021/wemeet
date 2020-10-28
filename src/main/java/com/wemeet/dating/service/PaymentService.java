@@ -6,10 +6,10 @@ import com.wemeet.dating.dao.*;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.entity.*;
+import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.model.enums.TransactionType;
 import com.wemeet.dating.model.request.*;
 import com.wemeet.dating.model.response.PaymentResponse;
-import com.wemeet.dating.model.response.PaymentStatusResponse;
 import com.wemeet.dating.model.response.PlanResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @EnableAsync
@@ -29,19 +34,23 @@ public class PaymentService {
     private final SubscriptionRepository subscriptionRepository;
     private final WebhookRepository webhookRepository;
     private final UserRepository userRepository;
+    private final AccountExpiryRepository accountExpiryRepository;
+
+    DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     @Autowired
     private ObjectMapper objectMapper;
 
     Logger logger = LoggerFactory.getLogger(PaymentController.class);
 
-    public PaymentService(PaystackService paystackService, PlanRepository planRepository, TransactionRepository transactionRepository, SubscriptionRepository subscriptionRepository, WebhookRepository webhookRepository, UserRepository userRepository) {
+    public PaymentService(PaystackService paystackService, PlanRepository planRepository, TransactionRepository transactionRepository, SubscriptionRepository subscriptionRepository, WebhookRepository webhookRepository, UserRepository userRepository, AccountExpiryRepository accountExpiryRepository) {
         this.paystackService = paystackService;
         this.planRepository = planRepository;
         this.transactionRepository = transactionRepository;
         this.subscriptionRepository = subscriptionRepository;
         this.webhookRepository = webhookRepository;
         this.userRepository = userRepository;
+        this.accountExpiryRepository = accountExpiryRepository;
     }
 
     public PaystackPlan createPlan(User user, CreatePlanRequest request) throws Exception{
@@ -62,7 +71,7 @@ public class PaymentService {
         return planResponse;
     }
 
-    public PlanResponse getPlans(User user) throws Exception{
+    public List<Plan> getPlans(User user) throws Exception{
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
@@ -77,17 +86,32 @@ public class PaymentService {
                 plan1.setCurrency(plan.getCurrency());
                 plan1.setCode(plan.getPlan_code());
                 plan1.setPeriod(plan.getInterval());
-                plan1.setName(plan.getName());
+                plan1.setName(plan.getName().toUpperCase());
                 planRepository.save(plan1);
             }
         });
-        return planResponse;
+
+        List<Plan> plans= new ArrayList<>();
+        planRepository.findAll().forEach(plans::add);
+        plans =  plans.stream()
+                .filter(plan -> plan.getName().toUpperCase() != user.getType().getName())
+                .collect(Collectors.toList());
+
+        return plans;
     }
 
     public PaymentResponse upgradeUserPlan(User user, PaymentRequest request) throws  Exception{
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
+
+        Plan plan = planRepository.findByCode(request.getPlan_code());
+        if (plan == null){
+            throw new BadRequestException("Invalid plan!");
+        }
+        
+//        how do we ensure that the user is not billed twice; *frontend validation*
+
         Transaction transaction = createTransaction(user);
 
         PaystackPaymentObject paystackPaymentObject = new PaystackPaymentObject();
@@ -102,13 +126,12 @@ public class PaymentService {
         return paymentResponse;
     }
 
-
-    public PaymentStatusResponse verifyTransaction(User user, String reference) throws  Exception{
+    public PaystackTransactionData verifyTransaction(User user, String reference) throws  Exception{
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
-        PaymentStatusResponse paymentStatusResponse = paystackService.verifyTransaction(reference, PaymentStatusResponse.class);
-        return paymentStatusResponse;
+        PaystackTransactionData paystackTransactionData = paystackService.verifyTransaction(reference, PaystackTransactionData.class);
+        return paystackTransactionData;
     }
 
     private Transaction createTransaction(User user) throws BadRequestException {
@@ -150,8 +173,6 @@ public class PaymentService {
                     processChargeSuccess(webhook, request);
                     break;
                 case "subscription.disable":
-                    processSubscription(webhook, request);
-                    break;
                 case "subscription.create":
                     processSubscription(webhook, request);
                     break;
@@ -171,6 +192,7 @@ public class PaymentService {
         logger.info("webhook -  paystack - InvoiceFailed", request);
     }
 
+    @Transactional
     private void processChargeSuccess(Webhook webhook, PaymentWebhookRequest request) {
         PaystackTransactionData transactionData = objectMapper.convertValue(request.getData(), PaystackTransactionData.class);
 
@@ -188,43 +210,56 @@ public class PaymentService {
     }
 
 
-    private void processSubscription(Webhook webhook, PaymentWebhookRequest request){
+    @Transactional
+    private void processSubscription(Webhook webhook, PaymentWebhookRequest request) throws Exception {
 
         PaystackSubscription paystackSubscription = objectMapper.convertValue(request.getData(), PaystackSubscription.class);
 
         User user = userRepository.findByEmailAndDeletedIsFalse(paystackSubscription.getCustomer().getEmail());
+        if (user == null){
+            logger.error("user not found, process Subscription", paystackSubscription.getCustomer().getEmail());
+            throw new Exception("User not found");
+        }
+
         Subscription subscription = subscriptionRepository.findByUser(user);
 
         if (subscription == null){
             subscription = new Subscription();
             subscription.setAmount(paystackSubscription.getAmount());
             subscription.setPlan_code(paystackSubscription.getPlan().getPlan_code());
-            subscription.setPurchased(LocalDateTime.parse(paystackSubscription.getCreated_at()));
+            subscription.setPurchased(LocalDateTime.parse(paystackSubscription.getCreated_at(), DATE_FORMAT));
             subscription.setUser(user);
             subscription.setQuantity(1);
             subscription.setCron_expression(paystackSubscription.getCron_exxpression());
-            subscription.setStarted(LocalDateTime.parse(paystackSubscription.getCreated_at()));
-            subscription.setNext_payment_date(LocalDateTime.parse(paystackSubscription.getNext_payment_date()));
+            subscription.setStarted(LocalDateTime.parse(paystackSubscription.getCreated_at(), DATE_FORMAT));
+            subscription.setNext_payment_date(LocalDateTime.parse(paystackSubscription.getNext_payment_date(), DATE_FORMAT));
+            subscription.setActive(true);
             subscriptionRepository.save(subscription);
+
+            user.setType(AccountType.valueOf(paystackSubscription.getPlan().getName().toUpperCase()));
+            userRepository.save(user);
 
             webhook.setCompleted(true);
             webhookRepository.save(webhook);
 
+        }else{
+            subscription.setAmount(paystackSubscription.getAmount());
+            subscription.setPlan_code(paystackSubscription.getPlan().getPlan_code());
+            subscription.setPurchased(LocalDateTime.parse(paystackSubscription.getCreated_at(), DATE_FORMAT));
+            subscription.setUser(user);
+            subscription.setQuantity(1);
+            subscription.setCron_expression(paystackSubscription.getCron_exxpression());
+            subscription.setStarted(LocalDateTime.parse(paystackSubscription.getCreated_at(), DATE_FORMAT));
+            subscription.setNext_payment_date(LocalDateTime.parse(paystackSubscription.getNext_payment_date(), DATE_FORMAT));
+            subscription.setActive(true);
+            subscriptionRepository.save(subscription);
+
+            user.setType(AccountType.valueOf(paystackSubscription.getPlan().getName().toUpperCase()));
+            userRepository.save(user);
+
+            webhook.setCompleted(true);
+            webhookRepository.save(webhook);
         }
-
-        subscription.setAmount(paystackSubscription.getAmount());
-        subscription.setPlan_code(paystackSubscription.getPlan().getPlan_code());
-        subscription.setPurchased(LocalDateTime.parse(paystackSubscription.getCreated_at()));
-        subscription.setUser(user);
-        subscription.setQuantity(1);
-        subscription.setCron_expression(paystackSubscription.getCron_exxpression());
-        subscription.setStarted(LocalDateTime.parse(paystackSubscription.getCreated_at()));
-        subscription.setNext_payment_date(LocalDateTime.parse(paystackSubscription.getNext_payment_date()));
-        subscriptionRepository.save(subscription);
-
-        webhook.setCompleted(true);
-        webhookRepository.save(webhook);
-
     }
 
 }

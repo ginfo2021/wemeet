@@ -213,6 +213,19 @@ public class AdminController {
                 .build();
     }
 
+//    @AdminUser(message = "Current User Not Admin")
+//    @GetMapping(value = "/music/list", produces = MediaType.APPLICATION_JSON_VALUE)
+//    public ApiResponse getPlayist(@AuthenticationPrincipal UserResult userResult,
+//                                    @RequestParam(defaultValue = "0") int pageNum,
+//                                    @RequestParam(defaultValue = "10") int pageSize) throws Exception {
+//
+//        return ApiResponse.builder()
+//                .message("Fetched  successfully")
+//                .data(musicService.getMusicList(userResult.getUser(), pageNum, pageSize))
+//                .responseCode(ResponseCode.SUCCESS)
+//                .build();
+//    }
+
     @AdminUser(message = "Current User Not Admin")
     @PostMapping(value = "/music/playlist", produces = MediaType.APPLICATION_JSON_VALUE)
 

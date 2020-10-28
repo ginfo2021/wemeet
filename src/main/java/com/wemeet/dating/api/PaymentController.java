@@ -10,7 +10,9 @@ import com.wemeet.dating.util.validation.constraint.NotSuspendedUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -28,14 +30,20 @@ public class PaymentController {
     @PostMapping(value = "/webhook",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public void callback(@RequestHeader(value = "x-paystack-signature") String paystackSignature, @RequestBody PaymentWebhookRequest webhookRequest){
+    public ResponseEntity<String> callback(@RequestHeader(value = "x-paystack-signature") String paystackSignature, @RequestBody PaymentWebhookRequest webhookRequest){
         //validate request sender - use paystack signature
-        try {
-            paymentService.handleCallback(paystackSignature, webhookRequest);
-        }catch (Exception ex){
-            logger.error("Error receiving webhook request", ex);
-        }
+        paymentService.handleCallback(paystackSignature, webhookRequest);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
+    @GetMapping(value = "/webhook",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public String webhookRedirect(
+            @RequestParam(required = false) String reference,
+            @RequestParam(required = false) String trxref
+    ){
+        logger.info("reference && trxref", reference, trxref);
+        return "payment-complete";
     }
 
     @NotSuspendedUser(message = "User is suspended")

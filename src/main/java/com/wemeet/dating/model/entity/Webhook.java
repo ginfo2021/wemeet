@@ -15,7 +15,7 @@ public class Webhook {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "request", columnDefinition = "LONGTEXT")
     private String request;
 
     @Column(nullable = false)

@@ -1,7 +1,9 @@
 package com.wemeet.dating.service;
 
 import com.wemeet.dating.dao.AccountExpiryRepository;
+import com.wemeet.dating.dao.SubscriptionRepository;
 import com.wemeet.dating.model.entity.AccountExpiry;
+import com.wemeet.dating.model.entity.Subscription;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.util.DateUtil;
@@ -14,7 +16,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -24,13 +25,15 @@ public class AccountExpiryService {
 
     private final AccountExpiryRepository accountExpiryRepository;
     private final UserService userService;
+    private final SubscriptionRepository subscriptionRepository;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    public AccountExpiryService(AccountExpiryRepository accountExpiryRepository, UserService userService) {
+    public AccountExpiryService(AccountExpiryRepository accountExpiryRepository, UserService userService, SubscriptionRepository subscriptionRepository) {
         this.accountExpiryRepository = accountExpiryRepository;
         this.userService = userService;
+        this.subscriptionRepository = subscriptionRepository;
     }
 
 
@@ -46,10 +49,16 @@ public class AccountExpiryService {
     private void downgradeUser(AccountExpiry accountExpiry) {
         try {
             User user = userService.findById(accountExpiry.getUser().getId());
+            Subscription subscription = subscriptionRepository.findByUser(user);
+
             user.setType(AccountType.FREE);
             userService.createOrUpdateUser(user);
+
             accountExpiry.setExpired(true);
             accountExpiryRepository.save(accountExpiry);
+
+            subscription.setActive(false);
+            subscriptionRepository.save(subscription);
         } catch (Exception ex) {
             logger.error("Unable to downgrade User", ex);
         }
