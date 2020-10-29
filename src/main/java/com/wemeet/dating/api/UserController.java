@@ -109,10 +109,9 @@ public class UserController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse publish(@Valid @RequestBody NotificationRequest notificationRequest,
                                         @AuthenticationPrincipal UserResult userResult) throws Exception {
-
+        pushNotificationService.sendPushNotificationToToken(notificationRequest);
         return ApiResponse.builder()
                 .message("Successfully published message")
-                .data(pushNotificationService.publishNotificationTOSQS(notificationRequest))
                 .build();
     }
 

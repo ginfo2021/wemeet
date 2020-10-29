@@ -94,12 +94,12 @@ public class SwipeService {
                     if(userDevice.isEmpty()){
                         logger.info("could not devices for user");
                     }
-                    userDevice.stream().forEach(userDevice1 -> {
+                    userDevice.forEach(userDevice1 -> {
                         NotificationRequest notificationRequest = new NotificationRequest();
                         notificationRequest.setMessage("You have a new match!");
                         notificationRequest.setTitle("Wemeet");
                         notificationRequest.setToken(userDevice1.getDeviceId());
-                        pushNotificationService.sendPushNotificationToToken( notificationRequest);
+                        pushNotificationService.sendPushNotificationToToken(notificationRequest);
                     });
                 } catch (Exception ex) {
                     logger.error("Unable to send message notification", ex);

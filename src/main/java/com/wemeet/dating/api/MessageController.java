@@ -1,11 +1,11 @@
 package com.wemeet.dating.api;
 
 import com.wemeet.dating.model.request.MessageRequest;
-import com.wemeet.dating.model.request.SwipeRequest;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
 import com.wemeet.dating.service.MessageService;
+import com.wemeet.dating.service.PushNotificationService;
 import com.wemeet.dating.util.validation.constraint.ActiveUser;
 import com.wemeet.dating.util.validation.constraint.NotSuspendedUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +23,13 @@ public class MessageController {
 
 
     private final MessageService messageService;
+    private final PushNotificationService notificationService;
+
 
     @Autowired
-    public MessageController(MessageService messageService) {
+    public MessageController(MessageService messageService, PushNotificationService notificationService) {
         this.messageService = messageService;
+        this.notificationService = notificationService;
     }
 
 

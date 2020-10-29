@@ -57,9 +57,9 @@ public class StorageService {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
 
-        if(!request.getFileType().getName().equals("MUSIC")){
-            throw new InvalidFileTypeException("Endpoint accepts only music files");
-        }
+//        if(!request.getFileType().getName().equals("MUSIC")){
+//            throw new InvalidFileTypeException("Endpoint accepts only music files");
+//        }
 
         if(request.getFile().isEmpty()){
             throw new InvalidFileTypeException("Invalid file found");
@@ -73,7 +73,7 @@ public class StorageService {
         }
 
         FileUploadRequest fileUploadRequest = new FileUploadRequest();
-        fileUploadRequest.setFileType(request.getFileType());
+//        fileUploadRequest.setFileType(request.getFileType());
         fileUploadRequest.setFile(request.getFile());
 
         String musicUrl = s3Service.putObject(user.getUser(), fileUploadRequest);
