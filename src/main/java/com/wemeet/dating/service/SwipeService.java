@@ -2,16 +2,19 @@ package com.wemeet.dating.service;
 
 import com.wemeet.dating.config.WemeetConfig;
 import com.wemeet.dating.dao.SwipeRepository;
+import com.wemeet.dating.dao.UserDeviceRepository;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.exception.PreferenceNotSetException;
 import com.wemeet.dating.exception.UserNotPremiumException;
 import com.wemeet.dating.model.entity.Swipe;
 import com.wemeet.dating.model.entity.User;
+import com.wemeet.dating.model.entity.UserDevice;
 import com.wemeet.dating.model.entity.UserPreference;
 import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.model.enums.Gender;
 import com.wemeet.dating.model.enums.SwipeType;
+import com.wemeet.dating.model.request.NotificationRequest;
 import com.wemeet.dating.model.request.SwipeRequest;
 import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.PageResponse;
@@ -42,15 +45,18 @@ public class SwipeService {
     private final UserService userService;
     private final UserPreferenceService userPreferenceService;
     private final PushNotificationService pushNotificationService;
+    private final UserDeviceRepository userDeviceRepository;
+
 
 
     @Autowired
-    public SwipeService(WemeetConfig wemeetConfig, SwipeRepository swipeRepository, UserService userService, UserPreferenceService userPreferenceService, PushNotificationService pushNotificationService) {
+    public SwipeService(WemeetConfig wemeetConfig, SwipeRepository swipeRepository, UserService userService, UserPreferenceService userPreferenceService, PushNotificationService pushNotificationService, UserDeviceRepository userDeviceRepository) {
         this.wemeetConfig = wemeetConfig;
         this.swipeRepository = swipeRepository;
         this.userService = userService;
         this.userPreferenceService = userPreferenceService;
         this.pushNotificationService = pushNotificationService;
+        this.userDeviceRepository = userDeviceRepository;
     }
 
 
@@ -84,7 +90,17 @@ public class SwipeService {
             if (counterSwipe != null && counterSwipe.getType().equals(SwipeType.LIKE)) {
                 response.setMatch(true);
                 try {
-                    pushNotificationService.pushNotification("You have a new match!", "user");
+                    List<UserDevice> userDevice = userDeviceRepository.findByUser(swipee);
+                    if(userDevice.isEmpty()){
+                        logger.info("could not devices for user");
+                    }
+                    userDevice.stream().forEach(userDevice1 -> {
+                        NotificationRequest notificationRequest = new NotificationRequest();
+                        notificationRequest.setMessage("You have a new match!");
+                        notificationRequest.setTitle("Wemeet");
+                        notificationRequest.setToken(userDevice1.getDeviceId());
+                        pushNotificationService.sendPushNotificationToToken( notificationRequest);
+                    });
                 } catch (Exception ex) {
                     logger.error("Unable to send message notification", ex);
                 }

@@ -1,19 +1,16 @@
 package com.wemeet.dating.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.wemeet.dating.model.enums.MessageType;
-import com.wemeet.dating.model.enums.SwipeType;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Data
 @Entity
 @Table(name = "message")
-public class Message {
+public class Message{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

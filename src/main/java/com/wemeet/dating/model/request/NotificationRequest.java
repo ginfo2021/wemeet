@@ -1,11 +1,13 @@
 package com.wemeet.dating.model.request;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class NotificationRequest {
-    private Long userId;
-    private String notificationText;
-    private String notificationType;
-    private String recipientId; //SAME AS DEVICEID
+    private String title;
+    private String message;
+    private String topic;
+    private String token;  //SAME AS DEVICEID
 }
