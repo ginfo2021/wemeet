@@ -6,10 +6,7 @@ import com.wemeet.dating.dao.MessageRepository;
 import com.wemeet.dating.dao.PlanRepository;
 import com.wemeet.dating.dao.UserDeviceRepository;
 import com.wemeet.dating.exception.*;
-import com.wemeet.dating.model.entity.FeatureLimit;
-import com.wemeet.dating.model.entity.Message;
-import com.wemeet.dating.model.entity.Plan;
-import com.wemeet.dating.model.entity.User;
+import com.wemeet.dating.model.entity.*;
 import com.wemeet.dating.model.request.MessageRequest;
 import com.wemeet.dating.model.request.NotificationRequest;
 import com.wemeet.dating.model.response.MessageResponse;
@@ -42,7 +39,7 @@ public class MessageService {
     private final FeatureLimitRepository limitRepository;
 
     @Autowired
-    public MessageService(SwipeService swipeService, BlockService blockService, UserService userService, MessageRepository messageRepository, PushNotificationService pushNotificationService, WemeetConfig wemeetConfig, PlanRepository planRepository, FeatureLimitRepository limitRepository) {
+    public MessageService(SwipeService swipeService, BlockService blockService, UserService userService, MessageRepository messageRepository, UserDeviceRepository userDeviceRepository, PushNotificationService pushNotificationService, WemeetConfig wemeetConfig, PlanRepository planRepository, FeatureLimitRepository limitRepository) {
         this.swipeService = swipeService;
         this.blockService = blockService;
         this.userService = userService;
