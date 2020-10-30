@@ -40,29 +40,31 @@ public class PaystackService {
         String HMAC_SHA512 = "HmacSHA512";
         String body = OBJECT_MAPPER.writeValueAsString(request);
 
-        byte [] byteKey = config.getPaystackKey().getBytes("UTF-8");
+        byte[] byteKey = config.getPaystackKey().getBytes("UTF-8");
         SecretKeySpec keySpec = new SecretKeySpec(byteKey, HMAC_SHA512);
         Mac sha512_HMAC = Mac.getInstance(HMAC_SHA512);
         sha512_HMAC.init(keySpec);
-        byte [] mac_data = sha512_HMAC.
+        byte[] mac_data = sha512_HMAC.
                 doFinal(body.getBytes("UTF-8"));
         result = DatatypeConverter.printHexBinary(mac_data);
-        if(!result.toLowerCase().equals(paystackSignature)) {
+        if (!result.toLowerCase().equals(paystackSignature)) {
             logger.error("Not a valid paystack webhook request");
             throw new Exception("Not A valid paystack webhook request");
         }
     }
 
-    private HttpHeaders createHeaders(){
+    private HttpHeaders createHeaders() {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set("Authorization", "Bearer "+ config.getPaystackKey());
+        httpHeaders.set("Authorization", "Bearer " + config.getPaystackKey());
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         httpHeaders.set("User-Agent", "devwemeetagent");
         return httpHeaders;
-    };
+    }
+
+    ;
 
     public <T> T createPlan(Object request, Class<T> responseType) throws Exception {
-        String url = config.getPaystackBaseUrl()+ "/plan";
+        String url = config.getPaystackBaseUrl() + "/plan";
         String response = null;
 
         HttpEntity<Object> entity = new HttpEntity(request, createHeaders());
@@ -70,33 +72,37 @@ public class PaystackService {
         final ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
         response = responseEntity.getBody();
 
-        if(String.class.equals(responseType)){
+        if (String.class.equals(responseType)) {
             return (T) response;
         }
         return OBJECT_MAPPER.readValue(response, responseType);
-    };
+    }
+
+    ;
 
     public <T> T getPlans(Class<T> responseType) throws Exception {
-        String url = config.getPaystackBaseUrl()+ "/plan";
+        String url = config.getPaystackBaseUrl() + "/plan";
         String response = null;
 
 
-            HttpEntity<Object> entity = new HttpEntity(createHeaders());
+        HttpEntity<Object> entity = new HttpEntity(createHeaders());
 
-            final ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                response = responseEntity.getBody();
-            }
+        final ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            response = responseEntity.getBody();
+        }
 
-            if (String.class.equals(responseType)) {
-                return (T) response;
-            }
-            return OBJECT_MAPPER.readValue(response, responseType);
-            
-    };
+        if (String.class.equals(responseType)) {
+            return (T) response;
+        }
+        return OBJECT_MAPPER.readValue(response, responseType);
 
-    public <T> T initializeTransaction(Object request, Class<T> responseType) throws Exception{
-        String url = config.getPaystackBaseUrl()+ "/transaction/initialize";
+    }
+
+    ;
+
+    public <T> T initializeTransaction(Object request, Class<T> responseType) throws Exception {
+        String url = config.getPaystackBaseUrl() + "/transaction/initialize";
         String response = null;
 
         HttpEntity<Object> entity = new HttpEntity(request, createHeaders());
@@ -104,14 +110,54 @@ public class PaystackService {
         final ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
         response = responseEntity.getBody();
 
-        if(String.class.equals(responseType)){
+        if (String.class.equals(responseType)) {
             return (T) response;
         }
         return OBJECT_MAPPER.readValue(response, responseType);
-    };
+    }
 
-    public <T> T verifyTransaction(String reference, Class<T> responseType) throws Exception{
-        String url = config.getPaystackBaseUrl()+ "/transaction/verify/" + reference;
+    ;
+
+    public <T> T disableSubscription(Object request, Class<T> responseType) throws Exception {
+        String url = config.getPaystackBaseUrl() + "/subscription/disable";
+        String response = null;
+
+        HttpEntity<Object> entity = new HttpEntity(request, createHeaders());
+
+        final ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+        response = responseEntity.getBody();
+
+        if (String.class.equals(responseType)) {
+            return (T) response;
+        }
+        return OBJECT_MAPPER.readValue(response, responseType);
+    }
+
+    ;
+
+    public <T> T getSubscription(String code, Class<T> responseType) throws Exception {
+        String url = config.getPaystackBaseUrl() + "/subscription/" + code;
+        String response = null;
+
+
+        HttpEntity<Object> entity = new HttpEntity(createHeaders());
+
+        final ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            response = responseEntity.getBody();
+        }
+
+        if (String.class.equals(responseType)) {
+            return (T) response;
+        }
+        return OBJECT_MAPPER.readValue(response, responseType);
+
+    }
+
+    ;
+
+    public <T> T verifyTransaction(String reference, Class<T> responseType) throws Exception {
+        String url = config.getPaystackBaseUrl() + "/transaction/verify/" + reference;
         String response = null;
 
         HttpEntity<Object> entity = new HttpEntity(createHeaders());

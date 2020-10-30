@@ -21,10 +21,19 @@ public class WemeetConfig {
     @Value("${default.message.limit}")
     private int wemeetDefaultMessageLimit;
 
+    @Value("${default.update.location}")
+    private boolean wemeetDefaultUpdateLocation;
+
     @Value("${paystack.secret.key}")
     private String paystackKey;
 
     @Value("${paystack.base.url}")
     private String paystackBaseUrl;
+
+    @Value("${default.plan.name}")
+    private String wemeetDefaultPlanName;
+
+    @Value("${default.plan.code}")
+    private String weMeetDefaultPlanCode;
 
 }

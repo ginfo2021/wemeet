@@ -2,7 +2,6 @@ package com.wemeet.dating.dao;
 
 
 import com.wemeet.dating.model.entity.User;
-import com.wemeet.dating.model.enums.AccountType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -11,13 +10,15 @@ public interface UserRepository extends BaseRepository<User, Long> {
 
     User findByEmailAndDeletedIsFalse(String email);
 
+    User findTop1ByEmailOrderByIdDesc(String email);
+
     Page<User> findBySuspendedIsTrueAndDeletedIsFalse(Pageable pageable);
 
     @Query(countQuery = "select count(*) from user where active = false", nativeQuery = true)
     long countByActiveFalse();
 
     @Query(countQuery = "select count(*) from user where type = %?1%", nativeQuery = true)
-    long countByType(AccountType accountType);
+    long countByType(String accountType);
 
     @Query(value = "select count(*) from user where gender = 'MALE'", nativeQuery = true)
     long getMaleUsersCount();

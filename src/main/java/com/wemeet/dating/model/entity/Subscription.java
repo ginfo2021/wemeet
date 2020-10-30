@@ -21,6 +21,7 @@ public class Subscription {
 
     private String cron_expression;
 
+    @Column(nullable = false)
     private String subscription_code;
 
     private int quantity;

@@ -1,19 +1,22 @@
 package com.wemeet.dating.service;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wemeet.dating.config.WemeetConfig;
+import com.wemeet.dating.dao.FeatureLimitRepository;
+import com.wemeet.dating.dao.PlanRepository;
+import com.wemeet.dating.dao.SubscriptionRepository;
 import com.wemeet.dating.dao.UserRepository;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
-import com.wemeet.dating.model.entity.DeletedUser;
-import com.wemeet.dating.model.entity.User;
-import com.wemeet.dating.model.entity.UserImage;
-import com.wemeet.dating.model.entity.UserPreference;
-import com.wemeet.dating.model.enums.AccountType;
+import com.wemeet.dating.exception.UserNotPremiumException;
+import com.wemeet.dating.model.entity.*;
 import com.wemeet.dating.model.enums.DeleteType;
-import com.wemeet.dating.model.request.UserImageRequest;
-import com.wemeet.dating.model.request.UserLocationRequest;
-import com.wemeet.dating.model.request.UserProfile;
+import com.wemeet.dating.model.request.*;
+import com.wemeet.dating.model.response.DisableResponse;
 import com.wemeet.dating.model.response.PageResponse;
+import com.wemeet.dating.model.response.PaymentResponse;
+import com.wemeet.dating.model.response.PaystackSubscriptionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -38,15 +41,28 @@ public class UserService {
     private final UserRepository userRepository;
     private final DeletedUserService deletedUserService;
     private final UserImageService userImageService;
+    private final WemeetConfig config;
+    private final FeatureLimitRepository limitRepository;
+    private final PlanRepository planRepository;
+    private final SubscriptionRepository subscriptionRepository;
+    private final PaystackService paystackService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    public UserService(UserPreferenceService userPreferenceService, UserRepository userRepository, DeletedUserService deletedUserService, UserImageService userImageService) {
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    public UserService(UserPreferenceService userPreferenceService, UserRepository userRepository, DeletedUserService deletedUserService, UserImageService userImageService, WemeetConfig config, FeatureLimitRepository limitRepository, PlanRepository planRepository, SubscriptionRepository subscriptionRepository, PaystackService paystackService) {
         this.userPreferenceService = userPreferenceService;
         this.userRepository = userRepository;
         this.deletedUserService = deletedUserService;
         this.userImageService = userImageService;
+        this.config = config;
+        this.limitRepository = limitRepository;
+        this.planRepository = planRepository;
+        this.subscriptionRepository = subscriptionRepository;
+        this.paystackService = paystackService;
     }
 
     public User findUserByEmail(String email) {
@@ -93,6 +109,32 @@ public class UserService {
         deletedUser.setDeleteType(deleteType);
 
         deletedUserService.createDeletedUser(deletedUser);
+
+        disableUserSubcription(user);
+
+    }
+
+    private void disableUserSubcription(User user) {
+        try {
+
+
+            Subscription subscription = subscriptionRepository.findByUser(user);
+            if (subscription != null && subscription.isActive()) {
+
+                PaymentWebhookRequest subscriptionResponse = paystackService.getSubscription(subscription.getSubscription_code(), PaymentWebhookRequest.class);
+                PaystackSubscriptionResponse paystackSubscriptionResponse = objectMapper.convertValue(subscriptionResponse.getData(), PaystackSubscriptionResponse.class);
+
+                if (paystackSubscriptionResponse.getStatus().equals("active")) {
+                    DisableRequest disableRequest = new DisableRequest();
+                    disableRequest.setCode(paystackSubscriptionResponse.getSubscription_code());
+                    disableRequest.setToken(paystackSubscriptionResponse.getEmail_token());
+                    DisableResponse paymentResponse = paystackService.disableSubscription(disableRequest, DisableResponse.class);
+                }
+
+            }
+        } catch (Exception ex) {
+            logger.error("Unable to disable paystack subscription for user", ex);
+        }
     }
 
 
@@ -187,6 +229,9 @@ public class UserService {
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
+
+        validateUserTypeLocationLimit(user);
+
         UserPreference userPreference = userPreferenceService.findUserPreference(user.getId());
 
         if (locationRequest.getLongitude() != null) {
@@ -197,6 +242,23 @@ public class UserService {
             userPreference.setLatitude(locationRequest.getLatitude());
         }
         userPreferenceService.createOrUpdatePreference(userPreference);
+    }
+
+    private void validateUserTypeLocationLimit(User user) throws UserNotPremiumException {
+
+        Plan plan = planRepository.findByName(user.getType());
+        FeatureLimit featureLimit = limitRepository.findByPlan(plan);
+
+        if (featureLimit != null) {
+            if (!featureLimit.isUpdateLocation()) {
+                throw new UserNotPremiumException("You are not allowed to update Location");
+            }
+        } else {
+            if (!config.isWemeetDefaultUpdateLocation()) {
+                throw new UserNotPremiumException("You are not allowed to update Location");
+            }
+        }
+
     }
 
     public void updateUserImages(UserImageRequest imageRequest, User user) throws Exception {
@@ -228,6 +290,7 @@ public class UserService {
             return;
         user.setSuspended(true);
         createOrUpdateUser(user);
+        disableUserSubcription(user);
     }
 
     public void restoreUser(User user) {
@@ -265,28 +328,28 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public long getUsersCount(){
+    public long getUsersCount() {
         return userRepository.countByDeletedFalse();
     }
 
     @Transactional(readOnly = true)
-    public long getTotalDeactivatedUsersCount(){
+    public long getTotalDeactivatedUsersCount() {
         return userRepository.countByActiveFalse();
     }
 
     @Transactional(readOnly = true)
-    public long getTotalFreeAccountsCount(){
-        return userRepository.countByType(AccountType.FREE);
+    public long getTotalFreeAccountsCount() {
+        return userRepository.countByType("FREE");
     }
 
     @Transactional(readOnly = true)
-    public long getTotalPremiumAccountsCount(){
-        return userRepository.countByType(AccountType.PREMIUM);
+    public long getTotalPremiumAccountsCount() {
+        return userRepository.countByType("PREMIUM");
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<User> getAllUsers(String name, int pageNum, int pageSize){
-        if (name != null){
+    public PageResponse<User> getAllUsers(String name, int pageNum, int pageSize) {
+        if (name != null) {
             Page<User> userList = userRepository.getAllUsersSearch(name, PageRequest.of(pageNum, pageSize));
             PageResponse<User> userPage = new PageResponse<>(userList);
 
@@ -299,11 +362,11 @@ public class UserService {
         return userPage;
     }
 
-    public long getTotalMaleUsersCount(){
+    public long getTotalMaleUsersCount() {
         return userRepository.getMaleUsersCount();
     }
 
-    public long getTotalFemaleUsersCount(){
+    public long getTotalFemaleUsersCount() {
         return userRepository.getFemaleUsersCount();
     }
 

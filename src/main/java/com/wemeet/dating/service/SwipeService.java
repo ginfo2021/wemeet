@@ -1,17 +1,15 @@
 package com.wemeet.dating.service;
 
 import com.wemeet.dating.config.WemeetConfig;
+import com.wemeet.dating.dao.FeatureLimitRepository;
+import com.wemeet.dating.dao.PlanRepository;
 import com.wemeet.dating.dao.SwipeRepository;
 import com.wemeet.dating.dao.UserDeviceRepository;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.exception.PreferenceNotSetException;
 import com.wemeet.dating.exception.UserNotPremiumException;
-import com.wemeet.dating.model.entity.Swipe;
-import com.wemeet.dating.model.entity.User;
-import com.wemeet.dating.model.entity.UserDevice;
-import com.wemeet.dating.model.entity.UserPreference;
-import com.wemeet.dating.model.enums.AccountType;
+import com.wemeet.dating.model.entity.*;
 import com.wemeet.dating.model.enums.Gender;
 import com.wemeet.dating.model.enums.SwipeType;
 import com.wemeet.dating.model.request.NotificationRequest;
@@ -46,17 +44,20 @@ public class SwipeService {
     private final UserPreferenceService userPreferenceService;
     private final PushNotificationService pushNotificationService;
     private final UserDeviceRepository userDeviceRepository;
-
+    private final FeatureLimitRepository limitRepository;
+    private final PlanRepository planRepository;
 
 
     @Autowired
-    public SwipeService(WemeetConfig wemeetConfig, SwipeRepository swipeRepository, UserService userService, UserPreferenceService userPreferenceService, PushNotificationService pushNotificationService, UserDeviceRepository userDeviceRepository) {
+    public SwipeService(WemeetConfig wemeetConfig, SwipeRepository swipeRepository, UserService userService, UserPreferenceService userPreferenceService, PushNotificationService pushNotificationService, UserDeviceRepository userDeviceRepository, FeatureLimitRepository limitRepository, PlanRepository planRepository) {
         this.wemeetConfig = wemeetConfig;
         this.swipeRepository = swipeRepository;
         this.userService = userService;
         this.userPreferenceService = userPreferenceService;
         this.pushNotificationService = pushNotificationService;
         this.userDeviceRepository = userDeviceRepository;
+        this.limitRepository = limitRepository;
+        this.planRepository = planRepository;
     }
 
 
@@ -91,7 +92,7 @@ public class SwipeService {
                 response.setMatch(true);
                 try {
                     List<UserDevice> userDevice = userDeviceRepository.findByUser(swipee);
-                    if(userDevice.isEmpty()){
+                    if (userDevice.isEmpty()) {
                         logger.info("could not devices for user");
                     }
                     userDevice.stream().forEach(userDevice1 -> {
@@ -99,7 +100,7 @@ public class SwipeService {
                         notificationRequest.setMessage("You have a new match!");
                         notificationRequest.setTitle("Wemeet");
                         notificationRequest.setToken(userDevice1.getDeviceId());
-                        pushNotificationService.sendPushNotificationToToken( notificationRequest);
+                        pushNotificationService.sendPushNotificationToToken(notificationRequest);
                     });
                 } catch (Exception ex) {
                     logger.error("Unable to send message notification", ex);
@@ -112,14 +113,22 @@ public class SwipeService {
     }
 
     private void validateUserTypeFeatureLimit(User user) throws UserNotPremiumException {
-        if (user.getType().equals(AccountType.FREE)) {
-            Date now = new Date();
-            if (swipeRepository.countBySwiperAndDateCreatedBetween(user, DateUtil.getStartofDay(now), DateUtil.getEndofDay(now))
-                    >= wemeetConfig.getWemeetDefaultSwipeLimit()) {
+
+        Date now = new Date();
+        long swipesToday = swipeRepository.countBySwiperAndDateCreatedBetween(user, DateUtil.getStartofDay(now), DateUtil.getEndofDay(now));
+        Plan plan = planRepository.findByName(user.getType());
+        FeatureLimit featureLimit = limitRepository.findByPlan(plan);
+
+        if (featureLimit != null) {
+            if (swipesToday >= featureLimit.getDailyMessageLimit() && featureLimit.getDailyMessageLimit() != -1) {
                 throw new UserNotPremiumException("You have used up your swipes for the day");
             }
-
+        } else {
+            if (swipesToday >= wemeetConfig.getWemeetDefaultMessageLimit() && wemeetConfig.getWemeetDefaultMessageLimit()!= -1) {
+                throw new UserNotPremiumException("You have used up your swipes for the day");
+            }
         }
+
     }
 
     public Swipe findSwipe(Long id) {

@@ -1,6 +1,5 @@
 package com.wemeet.dating.model.request;
 
-import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.model.enums.Gender;
 import com.wemeet.dating.model.enums.WorkStatus;
 import com.wemeet.dating.util.converters.GenderListConverter;
@@ -29,7 +28,7 @@ public class UserProfile {
     private WorkStatus workStatus;
     @Convert(converter = GenderListConverter.class)
     private List<Gender> genderPreference;
-    private AccountType type;
+    private String type;
     private Integer age;
     private Double longitude;
     private Double latitude;

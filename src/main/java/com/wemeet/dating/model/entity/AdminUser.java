@@ -1,7 +1,6 @@
 package com.wemeet.dating.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.model.enums.Gender;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;

@@ -1,7 +1,9 @@
 package com.wemeet.dating.service;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
+import com.wemeet.dating.config.WemeetConfig;
 import com.wemeet.dating.config.security.JwtTokenHandler;
+import com.wemeet.dating.dao.PlanRepository;
 import com.wemeet.dating.events.OnGeneratePasswordToken;
 import com.wemeet.dating.events.OnInviteAdminEvent;
 import com.wemeet.dating.events.OnRegistrationCompleteEvent;
@@ -11,7 +13,6 @@ import com.wemeet.dating.exception.InvalidCredentialException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.TokenInfo;
 import com.wemeet.dating.model.entity.*;
-import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.model.enums.DeleteType;
 import com.wemeet.dating.model.enums.TokenType;
 import com.wemeet.dating.model.enums.UserType;
@@ -48,6 +49,8 @@ public class AuthService {
     private final ForgotPasswordService forgotPasswordService;
     private final UserDeviceService userDeviceService;
     private final AdminInviteService adminInviteService;
+    private final PlanRepository planRepository;
+    private final WemeetConfig config;
     public static final char[] VERIFY_EMAIL_ALPHABET =
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
@@ -62,7 +65,7 @@ public class AuthService {
                        EmailVerificationService emailVerificationService, UserPreferenceService userPreferenceService,
                        ForgotPasswordService forgotPasswordService, UserDeviceService userDeviceService,
                        NotificationService notificationService,
-                       AdminInviteService adminInviteService) {
+                       AdminInviteService adminInviteService, PlanRepository planRepository, WemeetConfig config) {
         this.userService = userService;
         this.adminUserService = adminUserService;
         this.passwordEncoder = passwordEncoder;
@@ -72,6 +75,8 @@ public class AuthService {
         this.forgotPasswordService = forgotPasswordService;
         this.userDeviceService = userDeviceService;
         this.adminInviteService = adminInviteService;
+        this.planRepository = planRepository;
+        this.config = config;
     }
 
     public UserResult login(UserLogin userLogin) throws InvalidCredentialException {
@@ -274,7 +279,8 @@ public class AuthService {
             throw new BadRequestException("You must Be 18 years to join this platform");
         }
         newUser.setDateOfBirth(userSignup.getDateOfBirth());
-        newUser.setType(AccountType.FREE);
+        Plan defaultPlan = planRepository.findByCode(config.getWeMeetDefaultPlanCode());
+        newUser.setType(defaultPlan.getName());
 
         return newUser;
     }

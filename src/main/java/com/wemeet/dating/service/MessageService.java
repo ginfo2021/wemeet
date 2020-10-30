@@ -1,11 +1,14 @@
 package com.wemeet.dating.service;
 
 import com.wemeet.dating.config.WemeetConfig;
+import com.wemeet.dating.dao.FeatureLimitRepository;
 import com.wemeet.dating.dao.MessageRepository;
+import com.wemeet.dating.dao.PlanRepository;
 import com.wemeet.dating.exception.*;
+import com.wemeet.dating.model.entity.FeatureLimit;
 import com.wemeet.dating.model.entity.Message;
+import com.wemeet.dating.model.entity.Plan;
 import com.wemeet.dating.model.entity.User;
-import com.wemeet.dating.model.enums.AccountType;
 import com.wemeet.dating.model.request.MessageRequest;
 import com.wemeet.dating.model.response.MessageResponse;
 import com.wemeet.dating.model.response.PageResponse;
@@ -32,15 +35,19 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final PushNotificationService pushNotificationService;
     private final WemeetConfig wemeetConfig;
+    private final PlanRepository planRepository;
+    private final FeatureLimitRepository limitRepository;
 
     @Autowired
-    public MessageService(SwipeService swipeService, BlockService blockService, UserService userService, MessageRepository messageRepository, PushNotificationService pushNotificationService, WemeetConfig wemeetConfig) {
+    public MessageService(SwipeService swipeService, BlockService blockService, UserService userService, MessageRepository messageRepository, PushNotificationService pushNotificationService, WemeetConfig wemeetConfig, PlanRepository planRepository, FeatureLimitRepository limitRepository) {
         this.swipeService = swipeService;
         this.blockService = blockService;
         this.userService = userService;
         this.messageRepository = messageRepository;
         this.pushNotificationService = pushNotificationService;
         this.wemeetConfig = wemeetConfig;
+        this.planRepository = planRepository;
+        this.limitRepository = limitRepository;
     }
 
     public MessageResponse sendMessage(User user, MessageRequest messageRequest) throws Exception {
@@ -88,13 +95,19 @@ public class MessageService {
     }
 
     private void validateUserTypeFeatureLimit(User user) throws UserNotPremiumException {
-        if (user.getType().equals(AccountType.FREE)) {
-            Date now = new Date();
-            if (messageRepository.countBySenderAndSentAtBetween(user, DateUtil.getLocalStartofDay(now), DateUtil.getLocalEndofDay(now))
-                    >= wemeetConfig.getWemeetDefaultMessageLimit()) {
+        Date now = new Date();
+        long messagesToday = messageRepository.countBySenderAndSentAtBetween(user, DateUtil.getLocalStartofDay(now), DateUtil.getLocalEndofDay(now));
+        Plan plan = planRepository.findByName(user.getType());
+        FeatureLimit featureLimit = limitRepository.findByPlan(plan);
+
+        if (featureLimit != null) {
+            if (messagesToday >= featureLimit.getDailyMessageLimit() && featureLimit.getDailyMessageLimit() != -1) {
                 throw new UserNotPremiumException("You have used up your messages for the day");
             }
-
+        } else {
+            if (messagesToday >= wemeetConfig.getWemeetDefaultMessageLimit() && wemeetConfig.getWemeetDefaultMessageLimit() != -1) {
+                throw new UserNotPremiumException("You have used up your messages for the day");
+            }
         }
     }
 
