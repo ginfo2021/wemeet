@@ -20,9 +20,10 @@ public class FirebaseConfig {
         try {
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(
-                            new ClassPathResource("wemeet-19cb4-firebase-adminsdk-ik9n6-45715b0532")
+                            new ClassPathResource("wemeet-19cb4-firebase-adminsdk-ik9n6-45715b0532.json")
                                     .getInputStream()
                     ))
+                    .setProjectId("wemeet-19cb4")
                     .build();
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);

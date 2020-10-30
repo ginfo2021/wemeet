@@ -4,12 +4,14 @@ import com.wemeet.dating.config.WemeetConfig;
 import com.wemeet.dating.dao.FeatureLimitRepository;
 import com.wemeet.dating.dao.MessageRepository;
 import com.wemeet.dating.dao.PlanRepository;
+import com.wemeet.dating.dao.UserDeviceRepository;
 import com.wemeet.dating.exception.*;
 import com.wemeet.dating.model.entity.FeatureLimit;
 import com.wemeet.dating.model.entity.Message;
 import com.wemeet.dating.model.entity.Plan;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.request.MessageRequest;
+import com.wemeet.dating.model.request.NotificationRequest;
 import com.wemeet.dating.model.response.MessageResponse;
 import com.wemeet.dating.model.response.PageResponse;
 import com.wemeet.dating.util.DateUtil;
@@ -33,6 +35,7 @@ public class MessageService {
     private final BlockService blockService;
     private final UserService userService;
     private final MessageRepository messageRepository;
+    private final UserDeviceRepository userDeviceRepository;
     private final PushNotificationService pushNotificationService;
     private final WemeetConfig wemeetConfig;
     private final PlanRepository planRepository;
@@ -44,6 +47,7 @@ public class MessageService {
         this.blockService = blockService;
         this.userService = userService;
         this.messageRepository = messageRepository;
+        this.userDeviceRepository = userDeviceRepository;
         this.pushNotificationService = pushNotificationService;
         this.wemeetConfig = wemeetConfig;
         this.planRepository = planRepository;
@@ -86,7 +90,15 @@ public class MessageService {
         message = messageRepository.save(message);
 
         try {
-            pushNotificationService.pushNotification("You have a new message!", "test");
+            List<UserDevice> userDevice = userDeviceRepository.findByUser(receiver);
+            userDevice.forEach(userDevice1 -> {
+                NotificationRequest notificationRequest = new NotificationRequest();
+                notificationRequest.setTitle("Wemeet");
+                notificationRequest.setMessage("You have a new message");
+                notificationRequest.setToken(userDevice1.getDeviceId());
+                pushNotificationService.sendPushNotificationToToken(notificationRequest);
+            });
+
         } catch (Exception ex) {
             logger.error("Unable to send message notification", ex);
         }
