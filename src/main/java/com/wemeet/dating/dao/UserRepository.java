@@ -14,24 +14,27 @@ public interface UserRepository extends BaseRepository<User, Long> {
 
     Page<User> findBySuspendedIsTrueAndDeletedIsFalse(Pageable pageable);
 
-    @Query(countQuery = "select count(*) from user where active = false", nativeQuery = true)
-    long countByActiveFalse();
+    @Query(value = "select count(*) from user where deleted = true", nativeQuery = true)
+    long countDeleted();
 
-    @Query(countQuery = "select count(*) from user where type = %?1%", nativeQuery = true)
+    @Query(value = "select count(*) from user where type = :accountType  and deleted = false", nativeQuery = true)
     long countByType(String accountType);
 
-    @Query(value = "select count(*) from user where gender = 'MALE'", nativeQuery = true)
+    @Query(value = "select count(*) from user where gender = 'MALE' and deleted = false", nativeQuery = true)
     long getMaleUsersCount();
 
-    @Query(value = "select count(*) from user where gender = 'FEMALE'", nativeQuery = true)
+    @Query(value = "select count(*) from user where gender = 'FEMALE' and deleted = false", nativeQuery = true)
     long getFemaleUsersCount();
 
     @Query(value = "select * from user where deleted = false order by date_created desc", nativeQuery = true)
     Page<User> getAllUsers(Pageable pageable);
 
-    @Query(value = "select * from user where first_name like %?1% or last_name like %?1% order by date_created desc", nativeQuery = true)
+    @Query(value = "select * from user where first_name like :name or last_name like :name and deleted = false order by date_created desc", nativeQuery = true)
     Page<User> getAllUsersSearch(String name, Pageable pageable);
 
-    @Query(countQuery = "select count(*) from user where deleted=false", nativeQuery = true)
+    @Query(value = "select count(*) from user where deleted = false", nativeQuery = true)
     long countByDeletedFalse();
+
+    @Query(value = "select count(*) from report where user_id = :userId", nativeQuery = true)
+    long countUserReports(long userId);
 }

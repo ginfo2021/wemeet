@@ -8,7 +8,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
+import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.util.Date;
@@ -30,11 +33,20 @@ public class UserProfile {
     private List<Gender> genderPreference;
     private String type;
     private Integer age;
+    private boolean showLocation;
+    private boolean hideProfile;
     private Double longitude;
     private Double latitude;
     private Integer distanceInKm;
     private Integer distanceInMiles;
-
+    private String email;
+    private boolean emailVerified;
+    private String phone;
+    private boolean phoneVerified;
+    private boolean active;
+    private boolean suspended;
+    private Date lastSeen;
+    private Date dateCreated;
     private Integer swipeRadius;
     @Min(value = 18, message = "minAge should not be less than 18")
     @Max(value = 60, message = "minAge should not be greater than 60")

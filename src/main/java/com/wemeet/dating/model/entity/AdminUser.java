@@ -45,9 +45,10 @@ public class AdminUser {
     @JsonIgnore
     private boolean deleted;
 
+    private Date lastSeen;
+
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
-    @JsonIgnore
     @Column(nullable = false)
     private Date dateCreated;
 

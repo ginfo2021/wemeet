@@ -14,7 +14,6 @@ import com.wemeet.dating.model.response.PlanResponse;
 import com.wemeet.dating.model.response.PlanWithLimit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -37,7 +36,7 @@ public class PaymentService {
     private final WebhookRepository webhookRepository;
     private final UserRepository userRepository;
     private final AccountExpiryService accountExpiryService;
-    private final FeatureLimitRepository featureLimitRepository;
+    private final FeatureLimitService featureLimitService;
     private final WemeetConfig wemeetConfig;
 
     DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
@@ -47,7 +46,7 @@ public class PaymentService {
 
     Logger logger = LoggerFactory.getLogger(PaymentController.class);
 
-    public PaymentService(PaystackService paystackService, PlanRepository planRepository, TransactionRepository transactionRepository, SubscriptionRepository subscriptionRepository, WebhookRepository webhookRepository, UserRepository userRepository, AccountExpiryService accountExpiryService, FeatureLimitRepository featureLimitRepository, WemeetConfig wemeetConfig) {
+    public PaymentService(PaystackService paystackService, PlanRepository planRepository, TransactionRepository transactionRepository, SubscriptionRepository subscriptionRepository, WebhookRepository webhookRepository, UserRepository userRepository, AccountExpiryService accountExpiryService, FeatureLimitService featureLimitService, WemeetConfig wemeetConfig) {
         this.paystackService = paystackService;
         this.planRepository = planRepository;
         this.transactionRepository = transactionRepository;
@@ -55,7 +54,7 @@ public class PaymentService {
         this.webhookRepository = webhookRepository;
         this.userRepository = userRepository;
         this.accountExpiryService = accountExpiryService;
-        this.featureLimitRepository = featureLimitRepository;
+        this.featureLimitService = featureLimitService;
         this.wemeetConfig = wemeetConfig;
     }
 
@@ -76,7 +75,7 @@ public class PaymentService {
         planRepository.save(plan);
 
         request.getLimits().setPlan(plan);
-        featureLimitRepository.save(request.getLimits());
+        featureLimitService.save(request.getLimits());
 
         return planResponse;
     }
@@ -104,18 +103,7 @@ public class PaymentService {
         List<PlanWithLimit> planWithLimits = new ArrayList<>();
         List<PlanWithLimit> finalPlanWithLimits = planWithLimits;
         planRepository.findAll().forEach(plan -> {
-            PlanWithLimit planWithLimit = new PlanWithLimit();
-            BeanUtils.copyProperties(plan, planWithLimit);
-            FeatureLimit featureLimit = featureLimitRepository.findByPlan(plan);
-            if (featureLimit == null) {
-                featureLimit = new FeatureLimit();
-                featureLimit.setPlan(plan);
-                featureLimit.setDailyMessageLimit(wemeetConfig.getWemeetDefaultMessageLimit());
-                featureLimit.setDailySwipeLimit(wemeetConfig.getWemeetDefaultSwipeLimit());
-                featureLimit.setUpdateLocation(wemeetConfig.isWemeetDefaultUpdateLocation());
-            }
-            planWithLimit.setLimits(featureLimit);
-            finalPlanWithLimits.add(planWithLimit);
+            finalPlanWithLimits.add(featureLimitService.findPlanWithLimitByCode(plan.getCode()));
         });
         planWithLimits = planWithLimits.stream()
                 .filter(plan -> !plan.getName().toUpperCase().equals(user.getType()))

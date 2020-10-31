@@ -81,12 +81,18 @@ public class JwtTokenHandler {
     public UserResult getAuthentication(String token) {
         boolean admin = false;
         User user = userService.findUserByEmail(getUsername(token));
+        if (user != null) {
+            user.setLastSeen(new Date());
+            userService.createOrUpdateUser(user);
+        }
         String userRole = getRole(token);
         //FIND ADMIN USER HERE
         if (user == null && StringUtils.hasText(userRole)) {
 
             AdminUser adminUser = adminUserService.findUserByEmail(getUsername(token));
             if (adminUser != null) {
+                adminUser.setLastSeen(new Date());
+                adminUserService.createOrUpdateUser(adminUser);
                 user = new User();
                 BeanUtils.copyProperties(adminUser, user);
                 admin = true;

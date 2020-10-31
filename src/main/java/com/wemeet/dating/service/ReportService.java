@@ -67,7 +67,7 @@ public class ReportService {
 
     }
 
-    public PageResponse<Report> getReportedUsers(Long userId, int pageNum, int pageSize) throws Exception {
+    public PageResponse<Report> getReports(Long userId, int pageNum, int pageSize) throws Exception {
         if (userId == null) {
             return getAllReports(pageNum, pageSize);
         } else {

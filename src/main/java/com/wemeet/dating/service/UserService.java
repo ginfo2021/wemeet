@@ -15,8 +15,8 @@ import com.wemeet.dating.model.enums.DeleteType;
 import com.wemeet.dating.model.request.*;
 import com.wemeet.dating.model.response.DisableResponse;
 import com.wemeet.dating.model.response.PageResponse;
-import com.wemeet.dating.model.response.PaymentResponse;
 import com.wemeet.dating.model.response.PaystackSubscriptionResponse;
+import com.wemeet.dating.model.response.PlanWithLimit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -46,6 +46,7 @@ public class UserService {
     private final PlanRepository planRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final PaystackService paystackService;
+    private final FeatureLimitService featureLimitService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -53,7 +54,7 @@ public class UserService {
     private ObjectMapper objectMapper;
 
     @Autowired
-    public UserService(UserPreferenceService userPreferenceService, UserRepository userRepository, DeletedUserService deletedUserService, UserImageService userImageService, WemeetConfig config, FeatureLimitRepository limitRepository, PlanRepository planRepository, SubscriptionRepository subscriptionRepository, PaystackService paystackService) {
+    public UserService(UserPreferenceService userPreferenceService, UserRepository userRepository, DeletedUserService deletedUserService, UserImageService userImageService, WemeetConfig config, FeatureLimitRepository limitRepository, PlanRepository planRepository, SubscriptionRepository subscriptionRepository, PaystackService paystackService, FeatureLimitService featureLimitService) {
         this.userPreferenceService = userPreferenceService;
         this.userRepository = userRepository;
         this.deletedUserService = deletedUserService;
@@ -63,6 +64,7 @@ public class UserService {
         this.planRepository = planRepository;
         this.subscriptionRepository = subscriptionRepository;
         this.paystackService = paystackService;
+        this.featureLimitService = featureLimitService;
     }
 
     public User findUserByEmail(String email) {
@@ -140,6 +142,12 @@ public class UserService {
 
     public UserProfile getProfile(Long userId) throws Exception {
         return getProfile(findById(userId));
+    }
+    public UserProfileBig getProfileBig(User user) throws Exception {
+        UserProfileBig profileBig = new UserProfileBig();
+        BeanUtils.copyProperties(getProfile(user), profileBig);
+        profileBig.setReportCount(userRepository.countUserReports(user.getId()));
+        return profileBig;
     }
 
     public UserProfile getProfile(User user) throws Exception {
@@ -334,7 +342,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public long getTotalDeactivatedUsersCount() {
-        return userRepository.countByActiveFalse();
+        return userRepository.countDeleted();
     }
 
     @Transactional(readOnly = true)
@@ -348,18 +356,32 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<User> getAllUsers(String name, int pageNum, int pageSize) {
+    public PageResponse<UserProfileBig> getAllUsers(String name, int pageNum, int pageSize) {
+        Page<User> userPage = null;
+        List<UserProfileBig> userProfiles = new ArrayList<>();
+        PageResponse<UserProfileBig> userProfilePage = new PageResponse<>();
         if (name != null) {
-            Page<User> userList = userRepository.getAllUsersSearch(name, PageRequest.of(pageNum, pageSize));
-            PageResponse<User> userPage = new PageResponse<>(userList);
-
-            return userPage;
+            userPage = userRepository.getAllUsersSearch(name, PageRequest.of(pageNum, pageSize));
+        } else {
+            userPage = userRepository.getAllUsers(PageRequest.of(pageNum, pageSize));
         }
+        userPage.toList().forEach(a -> {
+            try {
+                userProfiles.add(getProfileBig(a));
+            } catch (Exception e) {
+                logger.error("Error fetching user profile for user id: " + a, e);
+            }
+        });
 
-        Page<User> userList = userRepository.getAllUsers(PageRequest.of(pageNum, pageSize));
-        PageResponse<User> userPage = new PageResponse<>(userList);
+        userProfilePage.setContent(userProfiles);
+        userProfilePage.setPageNum(userPage.getNumber());
+        userProfilePage.setPageSize(userPage.getSize());
+        userProfilePage.setNumberOfElements(userPage.getNumberOfElements());
+        userProfilePage.setTotalElements(userPage.getTotalElements());
+        userProfilePage.setTotalPages(userPage.getTotalPages());
+        return userProfilePage;
 
-        return userPage;
+
     }
 
     public long getTotalMaleUsersCount() {
@@ -371,4 +393,11 @@ public class UserService {
     }
 
 
+    public PlanWithLimit getUserPlanDetails(User user) throws Exception {
+        if (user == null || user.getId() <= 0) {
+            throw new InvalidJwtAuthenticationException("User with token does Not exist");
+        }
+        return featureLimitService.findPlanWithLimitByName(user.getType());
+    }
 }
+

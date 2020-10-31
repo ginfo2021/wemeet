@@ -74,6 +74,18 @@ public class UserController {
 
     @NotSuspendedUser(message = "User is suspended")
     @ActiveUser(message = "User not active")
+    @GetMapping(value = "/plan", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse getUserPlanDetails(@AuthenticationPrincipal UserResult userResult) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Fetched UserDetails successfully")
+                .data(userService.getUserPlanDetails(userResult.getUser()))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @NotSuspendedUser(message = "User is suspended")
+    @ActiveUser(message = "User not active")
     @PostMapping(value = "/location",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)

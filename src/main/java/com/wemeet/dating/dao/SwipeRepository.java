@@ -65,6 +65,7 @@ public interface SwipeRepository extends BaseRepository<Swipe, Long> {
                     "U.deleted = 0  " +
                     "AND U.active = 1  " +
                     "AND U.suspended = 0  " +
+                    "AND U.hide_profile = 0  " +
                     "AND U.id <> :userId " +
                     "AND :userId NOT IN (SELECT swiper_id FROM swipe WHERE swipee_id = U.id) " +
                     "AND U.gender IN :genderPreferenceList " +

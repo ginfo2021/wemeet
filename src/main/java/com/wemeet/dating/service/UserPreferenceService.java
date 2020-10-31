@@ -37,6 +37,8 @@ public class UserPreferenceService {
         userPreference.setId(user.getId());
         userPreference.setLatitude(userSignup.getLatitude());
         userPreference.setLongitude(userSignup.getLongitude());
+        userPreference.setHideProfile(false);
+        userPreference.setShowLocation(true);
         return createOrUpdatePreference(userPreference);
     }
 

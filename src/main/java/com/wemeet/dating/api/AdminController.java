@@ -67,10 +67,9 @@ public class AdminController {
     @GetMapping(value = "/profile", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse getUserProfile(@AuthenticationPrincipal UserResult userResult, @RequestParam(value = "userId") Long userId) throws Exception {
 
-        User user = userService.findById(userId);
         return ApiResponse.builder()
                 .message("Fetched UserDetails successfully")
-                .data(userService.getProfile(user))
+                .data(userService.getProfile(userId))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
@@ -119,16 +118,16 @@ public class AdminController {
     }
 
     @AdminUser(message = "Current User Not Admin")
-    @GetMapping(value = "/reported-users", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/reports", produces = MediaType.APPLICATION_JSON_VALUE)
 
-    public ApiResponse getReportedUsers(@AuthenticationPrincipal UserResult userResult,
+    public ApiResponse getReports(@AuthenticationPrincipal UserResult userResult,
                                         @RequestParam(value = "userId", required = false) Long userId,
                                         @RequestParam(defaultValue = "0") int pageNum,
                                         @RequestParam(defaultValue = "10") int pageSize) throws Exception {
 
         return ApiResponse.builder()
                 .message("Fetched  successfully")
-                .data(reportService.getReportedUsers(userId, pageNum, pageSize))
+                .data(reportService.getReports(userId, pageNum, pageSize))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
