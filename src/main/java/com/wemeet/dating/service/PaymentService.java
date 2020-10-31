@@ -2,6 +2,7 @@ package com.wemeet.dating.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wemeet.dating.api.PaymentController;
+import com.wemeet.dating.config.WemeetConfig;
 import com.wemeet.dating.dao.*;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
@@ -10,8 +11,10 @@ import com.wemeet.dating.model.enums.TransactionType;
 import com.wemeet.dating.model.request.*;
 import com.wemeet.dating.model.response.PaymentResponse;
 import com.wemeet.dating.model.response.PlanResponse;
+import com.wemeet.dating.model.response.PlanWithLimit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -34,6 +37,8 @@ public class PaymentService {
     private final WebhookRepository webhookRepository;
     private final UserRepository userRepository;
     private final AccountExpiryService accountExpiryService;
+    private final FeatureLimitRepository featureLimitRepository;
+    private final WemeetConfig wemeetConfig;
 
     DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
@@ -42,7 +47,7 @@ public class PaymentService {
 
     Logger logger = LoggerFactory.getLogger(PaymentController.class);
 
-    public PaymentService(PaystackService paystackService, PlanRepository planRepository, TransactionRepository transactionRepository, SubscriptionRepository subscriptionRepository, WebhookRepository webhookRepository, UserRepository userRepository, AccountExpiryService accountExpiryService) {
+    public PaymentService(PaystackService paystackService, PlanRepository planRepository, TransactionRepository transactionRepository, SubscriptionRepository subscriptionRepository, WebhookRepository webhookRepository, UserRepository userRepository, AccountExpiryService accountExpiryService, FeatureLimitRepository featureLimitRepository, WemeetConfig wemeetConfig) {
         this.paystackService = paystackService;
         this.planRepository = planRepository;
         this.transactionRepository = transactionRepository;
@@ -50,8 +55,11 @@ public class PaymentService {
         this.webhookRepository = webhookRepository;
         this.userRepository = userRepository;
         this.accountExpiryService = accountExpiryService;
+        this.featureLimitRepository = featureLimitRepository;
+        this.wemeetConfig = wemeetConfig;
     }
 
+    @Transactional
     public PaystackPlan createPlan(User user, CreatePlanRequest request) throws Exception {
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
@@ -67,10 +75,13 @@ public class PaymentService {
         plan.setName(planResponse.getName());
         planRepository.save(plan);
 
+        request.getLimits().setPlan(plan);
+        featureLimitRepository.save(request.getLimits());
+
         return planResponse;
     }
 
-    public List<Plan> getPlans(User user) throws Exception {
+    public List<PlanWithLimit> getPlans(User user) throws Exception {
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
@@ -90,13 +101,27 @@ public class PaymentService {
             }
         });
 
-        List<Plan> plans = new ArrayList<>();
-        planRepository.findAll().forEach(plans::add);
-        plans = plans.stream()
+        List<PlanWithLimit> planWithLimits = new ArrayList<>();
+        List<PlanWithLimit> finalPlanWithLimits = planWithLimits;
+        planRepository.findAll().forEach(plan -> {
+            PlanWithLimit planWithLimit = new PlanWithLimit();
+            BeanUtils.copyProperties(plan, planWithLimit);
+            FeatureLimit featureLimit = featureLimitRepository.findByPlan(plan);
+            if (featureLimit == null) {
+                featureLimit = new FeatureLimit();
+                featureLimit.setPlan(plan);
+                featureLimit.setDailyMessageLimit(wemeetConfig.getWemeetDefaultMessageLimit());
+                featureLimit.setDailySwipeLimit(wemeetConfig.getWemeetDefaultSwipeLimit());
+                featureLimit.setUpdateLocation(wemeetConfig.isWemeetDefaultUpdateLocation());
+            }
+            planWithLimit.setLimits(featureLimit);
+            finalPlanWithLimits.add(planWithLimit);
+        });
+        planWithLimits = planWithLimits.stream()
                 .filter(plan -> !plan.getName().toUpperCase().equals(user.getType()))
                 .collect(Collectors.toList());
 
-        return plans;
+        return planWithLimits;
     }
 
     public PaymentResponse upgradeUserPlan(User user, PaymentRequest request) throws Exception {
@@ -225,7 +250,7 @@ public class PaymentService {
     private void processSubscription(Webhook webhook, PaymentWebhookRequest request) throws Exception {
         PaystackSubscription paystackSubscription = objectMapper.convertValue(request.getData(), PaystackSubscription.class);
         User user = userRepository.findByEmailAndDeletedIsFalse(paystackSubscription.getCustomer().getEmail());
-        if(user == null){
+        if (user == null) {
             user = userRepository.findTop1ByEmailOrderByIdDesc(paystackSubscription.getCustomer().getEmail());
         }
         if (user == null) {
