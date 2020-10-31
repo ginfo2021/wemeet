@@ -41,7 +41,6 @@ public class BlockService {
         this.swipeService = swipeService;
     }
 
-    @Transactional
     public Block block(Long blockedId, User user) throws Exception {
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");

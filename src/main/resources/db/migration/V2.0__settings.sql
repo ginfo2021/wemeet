@@ -4,5 +4,5 @@ INSERT INTO settings (setting_key, setting_value) VALUES('default.swipe.limit','
 
 INSERT INTO settings (setting_key, setting_value) VALUES('default.message.limit','-1');
 
-INSERT INTO settings (setting_key, setting_value) VALUES('security.jwt.token.expire.hour','24');
+INSERT INTO settings (setting_key, setting_value) VALUES('security.jwt.token.expire.hour','730');
 

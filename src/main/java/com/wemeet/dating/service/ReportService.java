@@ -46,7 +46,12 @@ public class ReportService {
         report.setType(reportRequest.getType());
         report.setUser(user);
         report.setReporter(reporter);
-        report = reportRepository.save(report);
+        try {
+            report = reportRepository.save(report);
+        } catch (DataIntegrityViolationException ex) {
+        throw new BadRequestException("You have already reported this user");
+    }
+
 
     }
 

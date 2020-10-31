@@ -10,6 +10,10 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Data
+@Table(
+        uniqueConstraints =
+        @UniqueConstraint(columnNames = {"user_id", "reporter_id"})
+)
 @Entity
 public class Report {
     @Id
