@@ -29,9 +29,8 @@ public class UserPreference {
 
     @Convert(converter = GenderListConverter.class)
     private List<Gender> genderPreference;
-    @Column(nullable = false, columnDefinition="boolean default true")
-    private boolean showLocation;
     @Column(nullable = false)
+    private boolean hideLocation;
     private boolean hideProfile;
 
     private Integer swipeRadius;

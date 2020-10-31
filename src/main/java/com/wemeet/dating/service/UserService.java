@@ -201,12 +201,21 @@ public class UserService {
 
     private UserPreference buildPreferenceFromProfile(UserProfile userProfile) throws BadRequestException {
         UserPreference userPreference = userPreferenceService.findUserPreference(userProfile.getId());
+
         if (StringUtils.hasText(userProfile.getBio())) {
             userPreference.setBio(userProfile.getBio());
         }
 
         if (userProfile.getGenderPreference() != null) {
             userPreference.setGenderPreference(userProfile.getGenderPreference());
+        }
+
+        if (userProfile.getHideLocation() != null) {
+            userPreference.setHideLocation(userProfile.getHideLocation());
+        }
+
+        if (userProfile.getHideProfile() != null) {
+            userPreference.setHideProfile(userProfile.getHideProfile());
         }
 
         if (userProfile.getMinAge() != null) {
