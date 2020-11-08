@@ -5,6 +5,7 @@ import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.entity.UserPreference;
 import com.wemeet.dating.model.enums.Gender;
 import com.wemeet.dating.model.user.UserLogin;
+import com.wemeet.dating.model.user.UserLogout;
 import com.wemeet.dating.model.user.UserSignup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,16 @@ public class UserPreferenceService {
             UserPreference userPreference = findUserPreference(user.getId());
             userPreference.setLatitude(userLogin.getLatitude());
             userPreference.setLongitude(userLogin.getLongitude());
+            createOrUpdatePreference(userPreference);
+        }
+
+    }
+
+    public void updateUserLocation(User user, UserLogout userLogout) {
+        if (userLogout.getLatitude() != null && userLogout.getLatitude() != null) {
+            UserPreference userPreference = findUserPreference(user.getId());
+            userPreference.setLatitude(userLogout.getLatitude());
+            userPreference.setLongitude(userLogout.getLongitude());
             createOrUpdatePreference(userPreference);
         }
 

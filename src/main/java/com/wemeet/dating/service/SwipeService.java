@@ -17,6 +17,7 @@ import com.wemeet.dating.model.request.SwipeRequest;
 import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.PageResponse;
 import com.wemeet.dating.model.response.SwipeResponse;
+import com.wemeet.dating.model.response.SwipeSuggestions;
 import com.wemeet.dating.util.DateUtil;
 import com.wemeet.dating.util.LocationUtils;
 import org.slf4j.Logger;
@@ -124,7 +125,7 @@ public class SwipeService {
                 throw new UserNotPremiumException("You have used up your swipes for the day");
             }
         } else {
-            if (swipesToday >= wemeetConfig.getWemeetDefaultMessageLimit() && wemeetConfig.getWemeetDefaultMessageLimit()!= -1) {
+            if (swipesToday >= wemeetConfig.getWemeetDefaultMessageLimit() && wemeetConfig.getWemeetDefaultMessageLimit() != -1) {
                 throw new UserNotPremiumException("You have used up your swipes for the day");
             }
         }
@@ -168,7 +169,7 @@ public class SwipeService {
     }
 
 
-    public List<UserProfile> getSwipeSuggestion(User user, boolean filterByDistance) throws Exception {
+    public SwipeSuggestions getSwipeSuggestion(User user, boolean filterByDistance) throws Exception {
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
@@ -207,7 +208,31 @@ public class SwipeService {
         }
 
 
-        return userProfiles;
+        return new SwipeSuggestions(userProfiles, getDailySwipesLeft(user));
+    }
+
+    private int getDailySwipesLeft(User user) throws UserNotPremiumException {
+
+        Date now = new Date();
+        long swipesToday = swipeRepository.countBySwiperAndDateCreatedBetween(user, DateUtil.getStartofDay(now), DateUtil.getEndofDay(now));
+        Plan plan = planRepository.findByName(user.getType());
+        FeatureLimit featureLimit = limitRepository.findByPlan(plan);
+
+        if (featureLimit != null) {
+            if (featureLimit.getDailyMessageLimit() < 0) {
+                return featureLimit.getDailyMessageLimit();
+            }
+
+            return (int) (featureLimit.getDailyMessageLimit() - swipesToday);
+
+        } else {
+            if (wemeetConfig.getWemeetDefaultMessageLimit() < 0) {
+                return wemeetConfig.getWemeetDefaultMessageLimit();
+            }
+
+            return (int) (wemeetConfig.getWemeetDefaultMessageLimit() - swipesToday);
+        }
+
     }
 
     public UserProfile getProfileWithUserDistance(Long userId, UserPreference requestingUserPreference) throws Exception {

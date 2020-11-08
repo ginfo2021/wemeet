@@ -34,9 +34,18 @@ public class UserDeviceService {
 
     }
 
+    public void deleteDevice(UserDevice userDevice){
+        userDeviceRepository.delete(userDevice);
+    }
+
     public UserDevice findOne(String deviceId){
         return userDeviceRepository.findByDeviceId(deviceId);
     }
+
+    public UserDevice findByDeviceAndUser(String deviceId, User user){
+        return userDeviceRepository.findByDeviceIdAndUser(deviceId, user);
+    }
+
 
     public List<UserDevice> findDeviceByUser(User user) {
         return userDeviceRepository.findByUser(user);

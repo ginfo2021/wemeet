@@ -84,6 +84,17 @@ public class AuthController {
                 .build();
     }
 
+    @PostMapping(value = "/logout",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse logout(@Valid @RequestBody UserLogout logout) throws Exception {
+        authService.logout(logout);
+        return ApiResponse.builder()
+                .message("Logout Successful")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
 
 
     @PostMapping(value = "/login/admin",
