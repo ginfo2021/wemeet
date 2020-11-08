@@ -104,7 +104,7 @@ public class BlockService {
 
         matchlist.toList().forEach(a -> {
             try {
-                userProfiles.add(userService.getProfile(a.getId()));
+                userProfiles.add(userService.getProfile(a.getBlocked().getId()));
             } catch (Exception e) {
                 logger.error("Error fetching user profile for user id: " + a, e);
             }
