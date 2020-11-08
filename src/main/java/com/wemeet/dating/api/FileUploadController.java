@@ -53,13 +53,11 @@ public class FileUploadController {
     }
 
     @GetMapping(value = "/playlist", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse getPlaylist(@AuthenticationPrincipal UserResult userResult,
-                                   @RequestParam(defaultValue = "0") int pageNum,
-                                   @RequestParam(defaultValue = "10") int pageSize) throws Exception {
+    public ApiResponse getPlaylist(@AuthenticationPrincipal UserResult userResult) throws Exception {
 
         return ApiResponse.builder()
                 .message("Fetched  successfully")
-                .data(musicService.getPlaylist(userResult.getUser(), pageNum, pageSize))
+                .data(musicService.getPlaylist(userResult.getUser()))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }

@@ -2,9 +2,7 @@ package com.wemeet.dating.api;
 
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.enums.DeleteType;
-import com.wemeet.dating.model.enums.MusicType;
-import com.wemeet.dating.model.request.CreatePlanRequest;
-import com.wemeet.dating.model.request.MusicUploadRequest;
+import com.wemeet.dating.model.request.*;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
@@ -16,9 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("v1/admin")
@@ -193,22 +188,58 @@ public class AdminController {
     @PostMapping(value = "/music/upload", produces = MediaType.APPLICATION_JSON_VALUE)
 
     public ApiResponse uploadMusic(@AuthenticationPrincipal UserResult userResult,
-                                   @RequestParam(value = "title") String title,
-                                   @RequestParam(value = "artist") String artist,
-                                   @RequestParam(value = "musicType") MusicType musicType,
-                                   List<MultipartFile> files
+                                   @ModelAttribute MusicUploadRequest request
                                    ) throws Exception {
-
-        MusicUploadRequest request = new MusicUploadRequest();
-        request.setFiles(files);
-        request.setArtist(artist);
-        request.setTitle(title);
-        request.setMusicType(musicType);
 
         storageService.storeMusicFiles(userResult, request);
 
         return ApiResponse.builder()
                 .message("Uploaded  successfully")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @AdminUser(message = "Current User Not Admin")
+    @PostMapping(value = "/create/playlist", produces = MediaType.APPLICATION_JSON_VALUE)
+
+    public ApiResponse createPlaylist(
+            @AuthenticationPrincipal UserResult userResult,
+            @RequestBody CreatePlaylistRequest request
+    ) throws Exception {
+
+        musicService.createOrUpdatePlaylist(userResult.getUser(), request);
+
+        return ApiResponse.builder()
+                .message("Uploaded  successfully")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @AdminUser(message = "Current User Not Admin")
+    @PostMapping(value = "/delete/song", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse deleteSongFromPlaylist(
+            @AuthenticationPrincipal UserResult userResult,
+            @RequestBody DeleteSongFromPlaylist request
+    ) throws Exception {
+
+        musicService.deleteSongFromPlaylist(userResult.getUser(), request);
+
+        return ApiResponse.builder()
+                .message("Deleted  successfully")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @AdminUser(message = "Current User Not Admin")
+    @PostMapping(value = "/delete/music", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse deleteMusic(@AuthenticationPrincipal UserResult userResult,
+                                   @RequestBody DeleteMusicRequest request
+    ) throws Exception {
+
+        musicService.deleteMusic(userResult.getUser(), request);
+
+        return ApiResponse.builder()
+                .message("Deleted successfully")
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
@@ -235,7 +266,7 @@ public class AdminController {
 
         return ApiResponse.builder()
                 .message("Fetched  successfully")
-                .data(musicService.getPlaylist(userResult.getUser(), pageNum, pageSize))
+                .data(musicService.getPlaylist(userResult.getUser()))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }

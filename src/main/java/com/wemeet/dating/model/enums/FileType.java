@@ -4,7 +4,8 @@ public enum FileType {
     PROFILE_IMAGE("PROFILE_IMAGE"),
     ADDITIONAL_IMAGE("ADDITIONAL_IMAGE"),
     PLAYLIST("PLAYLIST"),
-    REGULAR("REGULAR"),
+    MUSIC("MUSIC"),
+    ARTWORK("ARTWORK"),
     MESSAGE_ATTACHMENT("MESSAGE_ATTACHMENT");
 
     private final String name;

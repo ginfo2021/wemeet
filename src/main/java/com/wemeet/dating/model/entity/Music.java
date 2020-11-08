@@ -24,6 +24,8 @@ public class Music {
 
     private String songUrl;
 
+    private String artworkURL;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id", referencedColumnName = "id", nullable = false)
     private User uploadedBy;

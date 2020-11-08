@@ -2,10 +2,10 @@ package com.wemeet.dating.service;
 
 import com.wemeet.dating.dao.MusicRepository;
 import com.wemeet.dating.dao.PlaylistRepository;
+import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidFileTypeException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.entity.Music;
-import com.wemeet.dating.model.entity.Playlist;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.enums.FileType;
 import com.wemeet.dating.model.request.FileUploadRequest;
@@ -62,52 +62,50 @@ public class StorageService {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
 
-        if (request.getFiles().isEmpty()){
-            throw new InvalidFileTypeException("Files not found");
+        long musicCount = musicRepository.count();
+
+        if (musicCount >= 100){
+            throw new BadRequestException("Song upload limit exceeded");
         }
 
-        request.getFiles().forEach(multipartFile -> {
-            try {
-                if (isSupportedMusicContentType(multipartFile.getContentType())
-                        || isSupportedContentType(multipartFile.getContentType())){
-                    throw new InvalidFileTypeException("Invalid filetype");
-                }
+        if (request.getSong().isEmpty()){
+            throw new InvalidFileTypeException("Song is required");
+        }
 
-                FileUploadRequest fileUploadRequest  = new FileUploadRequest();
-                fileUploadRequest.setFile(multipartFile);
-                fileUploadRequest.setFileType(FileType.valueOf(request.getMusicType().getName()));
+        if (request.getSongArt().isEmpty()){
+            throw new InvalidFileTypeException("Song Art is required");
+        }
 
-                Music music = new Music();
-                music.setArtist(request.getArtist());
-                music.setTitle(request.getTitle());
-                music.setUploadedBy(user.getUser());
+        if (!isSupportedMusicContentType(request.getSong().getContentType())){
+            throw new InvalidFileTypeException("Invalid song filetype");
+        }
 
-                music = musicRepository.save(music);
+        if (!isSupportedContentType(request.getSongArt().getContentType())){
+            throw new InvalidFileTypeException("Invalid song art filetype");
+        }
 
-                if (request.getMusicType().getName().equals("PLAYLIST")){
-                    Playlist playlist = new Playlist();
-                    playlist.setSongId(music);
-                    playlist.setUploadedBy(user.getUser());
-                    playlist.setTitle(request.getTitle());
-                    playlist.setArtist(playlist.getArtist());
-                }
+        try {
+            Music music = new Music();
+            music.setTitle(request.getTitle());
+            music.setArtist(request.getArtist());
+            music.setUploadedBy(user.getUser());
 
-                if (isSupportedContentType(multipartFile.getContentType())){
-                    String fileUrl = s3Service.putObject(user.getUser(), fileUploadRequest);
-                    Playlist playlist = playlistRepository.findBySongId(music);
-                    if (playlist != null){
-                        playlist.setArtwork(fileUrl);
-                    }
+            FileUploadRequest uploadRequest = new FileUploadRequest();
+            uploadRequest.setFileType(FileType.valueOf("MUSIC"));
+            uploadRequest.setFile(request.getSong());
+            music.setSongUrl(s3Service.putObject(user.getUser(), uploadRequest));
 
-                }else {
-                    String musicUrl = s3Service.putObject(user.getUser(), fileUploadRequest);
-                    music.setSongUrl(musicUrl);
-                    musicRepository.save(music);
-                }
-            }catch (Exception ex){
-                ex.printStackTrace();
-            }
-        });
+            FileUploadRequest artworkRequest = new FileUploadRequest();
+            artworkRequest.setFile(request.getSongArt());
+            artworkRequest.setFileType(FileType.valueOf("ARTWORK"));
+            music.setArtworkURL(s3Service.putObject(user.getUser(), artworkRequest));
+
+            musicRepository.save(music);
+
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+
     }
 
 
