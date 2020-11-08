@@ -8,7 +8,6 @@ import com.wemeet.dating.model.entity.Music;
 import com.wemeet.dating.model.entity.Playlist;
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.request.CreatePlaylistRequest;
-import com.wemeet.dating.model.request.MusicCreateRequest;
 import com.wemeet.dating.model.response.PageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +32,14 @@ public class MusicService {
         }
 
         return new PageResponse<>(musicRepository.findAll(PageRequest.of(pageNum, pageSize)));
+    }
+
+    public PageResponse<Playlist> getPlaylist(User user, int pageNum, int pageSize) throws Exception {
+        if (user == null || user.getId() <= 0) {
+            throw new InvalidJwtAuthenticationException("User with token does Not exist");
+        }
+
+        return new PageResponse<>(playlistRepository.findAll(PageRequest.of(pageNum, pageSize)));
     }
 
     public Music findMusicById(Long id) {
@@ -71,13 +78,4 @@ public class MusicService {
         playlistRepository.save(playlist);
     }
 
-    public void createMusic(MusicCreateRequest request) throws  Exception{
-        Music music = new Music();
-
-        request.setArtist(request.getArtist());
-        request.setSongUrl(request.getSongUrl());
-        request.setTitle(request.getTitle());
-
-        musicRepository.save(music);
-    }
 }
