@@ -27,7 +27,6 @@ public class SongRequest {
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
-    @JsonIgnore
     @Column(nullable = false)
     private Date dateCreated;
 

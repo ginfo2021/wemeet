@@ -9,8 +9,11 @@ import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.request.ReportRequest;
 import com.wemeet.dating.model.response.PageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class SongRequestService {
@@ -61,12 +64,13 @@ public class SongRequestService {
     }
 
 
+    public void deleteSongRequests(List<Long> requestIds) {
+        for (Long id: requestIds){
+            try{
+            songRequestRepository.deleteById(id);
+            }catch (EmptyResultDataAccessException ex){
 
-
-
-
-
-
-
-
+            }
+        }
+    }
 }

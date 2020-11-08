@@ -19,6 +19,8 @@ import com.wemeet.dating.model.enums.UserType;
 import com.wemeet.dating.model.request.ChangePasswordRequest;
 import com.wemeet.dating.model.request.ResetPasswordRequest;
 import com.wemeet.dating.model.user.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,6 +59,8 @@ public class AuthService {
     @Value("${forgot.password.token.expire.hour}")
     private long passwordExpiryInHour;
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     @Autowired
     ApplicationEventPublisher eventPublisher;
 
@@ -77,6 +81,22 @@ public class AuthService {
         this.adminInviteService = adminInviteService;
         this.planRepository = planRepository;
         this.config = config;
+    }
+
+    public void logout(UserLogout logout) throws Exception {
+        try {
+            if (StringUtils.hasText(logout.getDeviceId()) && StringUtils.hasText(logout.getUserEmail())) {
+                User user = userService.findUserByEmail(logout.getUserEmail());
+                userDeviceService.deleteDevice(userDeviceService.findByDeviceAndUser(logout.getDeviceId(), user));
+                userPreferenceService.updateUserLocation(user, logout);
+
+            }
+        }catch (Exception ex){
+            logger.error("Error deleting user device",ex);
+        }
+
+
+
     }
 
     public UserResult login(UserLogin userLogin) throws InvalidCredentialException {
@@ -177,13 +197,12 @@ public class AuthService {
     @Transactional
     public UserResult adminSignUp(AdminSignup adminSignup) throws Exception {
 
-        if(!adminInviteService.verifyInvite(adminSignup)){
+        if (!adminInviteService.verifyInvite(adminSignup)) {
             throw new BadRequestException("Invalid Token");
         }
         User user = new User();
 
         AdminUser adminUser = adminUserService.createOrUpdateUser(buildUserFromSignUp(adminSignup));
-
 
 
         AdminInvite adminInvite = adminInviteService.getByToken(adminSignup.getToken());

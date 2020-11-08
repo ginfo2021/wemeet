@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -39,9 +40,10 @@ public class JwtTokenHandler {
 
     @Value("${security.jwt.token.secret}")
     private String secretKey;
-    private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    //private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
     @Autowired
     WemeetConfig config;
+
 
     private long validityInMilliseconds;
 
@@ -55,6 +57,7 @@ public class JwtTokenHandler {
     @PostConstruct
     protected void init() {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
+        secretKey = secretKey.concat(secretKey).concat(secretKey).concat(secretKey).concat(secretKey);
         validityInMilliseconds = config.getWemeetJwtvalidityInMilliseconds() * 3600000;
     }
 
@@ -74,7 +77,8 @@ public class JwtTokenHandler {
                 .setSubject(user.getEmail())
                 .setIssuedAt(now)
                 .setExpiration(validity)
-                .signWith(this.key, SignatureAlgorithm.HS512)
+                //.signWith(this.key, SignatureAlgorithm.HS512)
+                .signWith(SignatureAlgorithm.HS512, secretKey)
                 .compact();
     }
 
@@ -118,11 +122,13 @@ public class JwtTokenHandler {
     }
 
     private String getUsername(String token) {
-        return Jwts.parserBuilder().setSigningKey(this.key).build().parseClaimsJws(token).getBody().getSubject();
+        //return Jwts.parserBuilder().setSigningKey(this.key).build().parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parserBuilder().setSigningKey(this.secretKey).build().parseClaimsJws(token).getBody().getSubject();
     }
 
     private String getRole(String token) {
-        Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+        //Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+        Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
         return claims.getBody().get("role", String.class);
     }
 
@@ -136,7 +142,8 @@ public class JwtTokenHandler {
 
     public boolean validateToken(String token) throws Exception {
         try {
-            Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            //Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
 
             if (claims.getBody().getExpiration().before(new Date())) {
                 return false;

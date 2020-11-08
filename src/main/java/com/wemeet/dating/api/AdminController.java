@@ -17,6 +17,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("v1/admin")
 @Validated
@@ -157,6 +159,19 @@ public class AdminController {
         return ApiResponse.builder()
                 .message("Fetched  successfully")
                 .data(songRequestService.getRequests(userId, pageNum, pageSize))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @AdminUser(message = "Current User Not Admin")
+    @DeleteMapping(value = "/song-request", produces = MediaType.APPLICATION_JSON_VALUE)
+
+    public ApiResponse deleteSongRequests(@AuthenticationPrincipal UserResult userResult,
+                                       @RequestParam(value = "id") List<Long> requestIds) throws Exception {
+
+        songRequestService.deleteSongRequests(requestIds);
+        return ApiResponse.builder()
+                .message("Deleted successfully")
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
