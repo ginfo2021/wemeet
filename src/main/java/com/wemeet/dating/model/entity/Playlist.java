@@ -19,6 +19,11 @@ public class Playlist {
     @Column(nullable = false)
     private String title;
 
+    @Column(nullable = false)
+    private String artist;
+
+    private String artwork;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "song_id", referencedColumnName = "id", nullable = false)
     private Music songId;

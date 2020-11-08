@@ -20,6 +20,8 @@ public class Music {
     private String artist;
 
     @Column(nullable = false)
+    private String title;
+
     private String songUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)

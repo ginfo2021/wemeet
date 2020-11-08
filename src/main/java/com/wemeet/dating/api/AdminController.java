@@ -2,8 +2,8 @@ package com.wemeet.dating.api;
 
 import com.wemeet.dating.model.entity.User;
 import com.wemeet.dating.model.enums.DeleteType;
+import com.wemeet.dating.model.enums.MusicType;
 import com.wemeet.dating.model.request.CreatePlanRequest;
-import com.wemeet.dating.model.request.CreatePlaylistRequest;
 import com.wemeet.dating.model.request.MusicUploadRequest;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
@@ -16,6 +16,9 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("v1/admin")
@@ -190,11 +193,22 @@ public class AdminController {
     @PostMapping(value = "/music/upload", produces = MediaType.APPLICATION_JSON_VALUE)
 
     public ApiResponse uploadMusic(@AuthenticationPrincipal UserResult userResult,
-                                   MusicUploadRequest request) throws Exception {
+                                   @RequestParam(value = "title") String title,
+                                   @RequestParam(value = "artist") String artist,
+                                   @RequestParam(value = "musicType") MusicType musicType,
+                                   List<MultipartFile> files
+                                   ) throws Exception {
+
+        MusicUploadRequest request = new MusicUploadRequest();
+        request.setFiles(files);
+        request.setArtist(artist);
+        request.setTitle(title);
+        request.setMusicType(musicType);
+
+        storageService.storeMusicFiles(userResult, request);
 
         return ApiResponse.builder()
                 .message("Uploaded  successfully")
-                .data(storageService.storeMusicFiles(userResult, request))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
@@ -212,29 +226,16 @@ public class AdminController {
                 .build();
     }
 
-//    @AdminUser(message = "Current User Not Admin")
-//    @GetMapping(value = "/music/list", produces = MediaType.APPLICATION_JSON_VALUE)
-//    public ApiResponse getPlayist(@AuthenticationPrincipal UserResult userResult,
-//                                    @RequestParam(defaultValue = "0") int pageNum,
-//                                    @RequestParam(defaultValue = "10") int pageSize) throws Exception {
-//
-//        return ApiResponse.builder()
-//                .message("Fetched  successfully")
-//                .data(musicService.getMusicList(userResult.getUser(), pageNum, pageSize))
-//                .responseCode(ResponseCode.SUCCESS)
-//                .build();
-//    }
 
     @AdminUser(message = "Current User Not Admin")
-    @PostMapping(value = "/music/playlist", produces = MediaType.APPLICATION_JSON_VALUE)
-
-    public ApiResponse createPlaylist(@AuthenticationPrincipal UserResult userResult,
-                                   @RequestBody CreatePlaylistRequest request) throws Exception {
-
-        musicService.createOrUpdatePlaylist(userResult.getUser(), request);
+    @GetMapping(value = "/playlist", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse getPlaylist(@AuthenticationPrincipal UserResult userResult,
+                                    @RequestParam(defaultValue = "0") int pageNum,
+                                    @RequestParam(defaultValue = "10") int pageSize) throws Exception {
 
         return ApiResponse.builder()
-                .message("Playlist created successfully")
+                .message("Fetched  successfully")
+                .data(musicService.getPlaylist(userResult.getUser(), pageNum, pageSize))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }

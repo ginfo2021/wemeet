@@ -1,14 +1,23 @@
 package com.wemeet.dating.model.request;
 
+import com.wemeet.dating.model.enums.MusicType;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Data
 public class MusicUploadRequest {
-    private MusicCreateRequest musicCreateRequest;
+    @NotNull
+    private List<MultipartFile> files;
 
     @NotNull
-    private MultipartFile file;
+    private MusicType musicType;
+
+    @NotNull
+    private String title;
+
+    @NotNull
+    private String artist;
 }

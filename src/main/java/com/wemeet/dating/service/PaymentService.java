@@ -146,10 +146,12 @@ public class PaymentService {
         return paystackTransactionData;
     }
 
-    private Transaction createTransaction(User user) throws BadRequestException {
+    private Transaction createTransaction(User user) throws Exception {
         Transaction transaction = transactionRepository.findByUserAndStatus(user, "ongoing");
+
         if (transaction != null) {
-            throw new BadRequestException("Possible Duplicate Transaction");
+            transaction.setStatus("abandoned");
+            transactionRepository.save(transaction);
         }
 
         transaction = new Transaction();
