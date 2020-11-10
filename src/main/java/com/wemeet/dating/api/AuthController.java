@@ -76,7 +76,7 @@ public class AuthController {
     @PostMapping(value = "/login",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse login(@Valid @RequestBody UserLogin login) throws InvalidCredentialException {
+    public ApiResponse login(@Valid @RequestBody UserLogin login) throws Exception {
         return ApiResponse.builder()
                 .message("Login Successful")
                 .data(authService.login(login))
