@@ -7,10 +7,7 @@ import com.wemeet.dating.dao.PlanRepository;
 import com.wemeet.dating.events.OnGeneratePasswordToken;
 import com.wemeet.dating.events.OnInviteAdminEvent;
 import com.wemeet.dating.events.OnRegistrationCompleteEvent;
-import com.wemeet.dating.exception.BadRequestException;
-import com.wemeet.dating.exception.EntityNotFoundException;
-import com.wemeet.dating.exception.InvalidCredentialException;
-import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
+import com.wemeet.dating.exception.*;
 import com.wemeet.dating.model.TokenInfo;
 import com.wemeet.dating.model.entity.*;
 import com.wemeet.dating.model.enums.DeleteType;
@@ -99,7 +96,7 @@ public class AuthService {
 
     }
 
-    public UserResult login(UserLogin userLogin) throws InvalidCredentialException {
+    public UserResult login(UserLogin userLogin) throws InvalidCredentialException, SuspendedUserException {
         User existingUser;
 
         existingUser = userService.findUserByEmail(userLogin.getEmail());
@@ -110,6 +107,10 @@ public class AuthService {
 
         if (!passwordEncoder.matches(userLogin.getPassword(), existingUser.getPassword())) {
             throw new InvalidCredentialException();
+        }
+
+        if(existingUser.isSuspended()){
+            throw new SuspendedUserException();
         }
 
         String accessToken = tokenHandler.createToken(existingUser, null);

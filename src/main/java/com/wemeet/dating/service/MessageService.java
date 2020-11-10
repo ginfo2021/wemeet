@@ -68,7 +68,7 @@ public class MessageService {
 
         if (blockService.findByBlockerAndBlocked(user, receiver) != null
                 || blockService.findByBlockerAndBlocked(receiver, user) != null) {
-            throw new BlockedUserException("You have or have been blocked by user");
+            throw new BlockedUserException("You have blocked or have been blocked by user");
         }
 
         if (!swipeService.usersMatch(user, receiver)) {
