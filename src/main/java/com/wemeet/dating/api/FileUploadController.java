@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("v1/image")
+@RequestMapping("v1/file")
 @Validated
 public class FileUploadController {
 
@@ -58,6 +58,19 @@ public class FileUploadController {
         return ApiResponse.builder()
                 .message("Fetched  successfully")
                 .data(musicService.getPlaylist(userResult.getUser()))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+
+    @GetMapping(value = "/music", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse getMusicList(@AuthenticationPrincipal UserResult userResult,
+                                    @RequestParam(defaultValue = "0") int pageNum,
+                                    @RequestParam(defaultValue = "10") int pageSize) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Fetched  successfully")
+                .data(musicService.getMusicList(userResult.getUser(), pageNum, pageSize))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }

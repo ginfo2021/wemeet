@@ -70,7 +70,7 @@ public class PaymentController {
             ) throws Exception{
         return ApiResponse.builder()
                 .message("Payment Successful")
-                .data(paymentService.verifyTransaction(userResult.getUser(), reference))
+                .data(paymentService.verifyUserTransaction(userResult.getUser(), reference))
                 .build();
     }
 

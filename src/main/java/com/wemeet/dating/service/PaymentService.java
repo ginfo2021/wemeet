@@ -146,6 +146,14 @@ public class PaymentService {
         return paystackTransactionData;
     }
 
+    public Transaction verifyUserTransaction(User user, String reference) throws Exception {
+        if (user == null || user.getId() <= 0) {
+            throw new InvalidJwtAuthenticationException("User with token does Not exist");
+        }
+        Transaction transaction = transactionRepository.findByReference(reference);
+        return transaction;
+    }
+
     private Transaction createTransaction(User user) throws Exception {
         Transaction transaction = transactionRepository.findByUserAndStatus(user, "ongoing");
 

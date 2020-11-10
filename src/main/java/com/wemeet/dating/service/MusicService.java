@@ -125,36 +125,41 @@ public class MusicService {
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
-        Music music = musicRepository.findById(request.getSongId()).orElse(null);
 
-        if (music == null){
-            throw new BadRequestException("Invalid song id");
+        for (long song: request.getSongs()){
+            Music music = musicRepository.findById(song).orElse(null);
+
+            if (music == null){
+                throw new BadRequestException("Invalid song id");
+            }
+
+            Playlist playlist = playlistRepository.findBySongId(music);
+
+            if (playlist == null){
+                throw new BadRequestException("Song does not exist in playlist");
+            }
+
+            playlist.setDeleted(true);
+            playlistRepository.save(playlist);
+
         }
-
-        Playlist playlist = playlistRepository.findBySongId(music);
-
-        if (playlist == null){
-            throw new BadRequestException("Song does not exist in playlist");
-        }
-
-        playlist.setDeleted(true);
-        playlistRepository.save(playlist);
 
     }
 
     public void deleteMusic(User user, DeleteMusicRequest request) throws Exception {
         if (user == null || user.getId() <= 0) {
-            throw new InvalidJwtAuthenticationException("User with token does Not exist");
+            throw new InvalidJwtAuthenticationException("User with token does not exist");
         }
 
-        Music music = musicRepository.findById(request.getSongId()).orElse(null);
+        for (long song: request.getSongs()){
+            Music music = musicRepository.findById(song).orElse(null);
 
-        if (music == null){
-            throw new BadRequestException("Invalid song id");
+            if (music == null){
+                throw new BadRequestException("Invalid Song ID");
+            }
+
+            music.setDeleted(true);
+            musicRepository.save(music);
         }
-
-        music.setDeleted(true);
-        musicRepository.save(music);
-
     }
 }
