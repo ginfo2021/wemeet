@@ -86,7 +86,7 @@ public class StorageService {
 
         try {
             Music music = new Music();
-            music.setTitle(request.getTitle());
+            music.setTitle(request.getTitle().toLowerCase());
             music.setArtist(request.getArtist());
             music.setUploadedBy(user.getUser());
 

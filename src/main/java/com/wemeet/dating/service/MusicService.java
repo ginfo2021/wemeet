@@ -11,6 +11,8 @@ import com.wemeet.dating.model.request.CreatePlaylistRequest;
 import com.wemeet.dating.model.request.DeleteMusicRequest;
 import com.wemeet.dating.model.request.DeleteSongFromPlaylist;
 import com.wemeet.dating.model.response.PageResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +28,8 @@ public class MusicService {
     private final PlaylistRepository playlistRepository;
     private final UserService userService;
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     @Autowired
     public MusicService(MusicRepository musicRepository, PlaylistRepository playlistRepository, UserService userService) {
         this.musicRepository = musicRepository;
@@ -33,7 +37,7 @@ public class MusicService {
         this.userService = userService;
     }
 
-    public PageResponse<Music> getMusicList(User user, int pageNum, int pageSize) throws Exception {
+    public PageResponse<Music> getMusicList(String title, User user, int pageNum, int pageSize) throws Exception {
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
@@ -42,29 +46,66 @@ public class MusicService {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
 
+        PageResponse<Music> response = new PageResponse<>();
         List<Music> songs = new ArrayList<>();
-        musicRepository.findAll(PageRequest.of(pageNum, pageSize)).forEach(songs::add);
-        //remove deleted songs
-        songs = songs.stream()
-                .filter(song -> !song.isDeleted())
-                .collect(Collectors.toList());
+        Page<Music> musicPage = null;
 
-        return new PageResponse<>((Page<Music>) songs);
+        if (title != null){
+            musicPage = musicRepository.findByTitle(title.toLowerCase(), PageRequest.of(pageNum, pageSize));
+        }else {
+            musicPage = musicRepository.findAll(PageRequest.of(pageNum, pageSize));
+        }
+
+        musicPage.forEach(songs::add);
+        //remove deleted songs
+        songs = songs
+                .stream()
+                .filter(music -> !music.isDeleted()).collect(Collectors.toList());
+
+        response.setContent(songs);
+        response.setPageNum(musicPage.getNumber());
+        response.setNumberOfElements(musicPage.getNumberOfElements());
+        response.setPageSize(musicPage.getSize());
+        response.setTotalElements(musicPage.getTotalElements());
+        response.setTotalPages(musicPage.getTotalPages());
+
+        return response;
     }
 
-    public List<Playlist> getPlaylist(User user) throws Exception {
+    public PageResponse<Playlist> getPlaylist(String title, User user, int pageNum, int pageSize) throws Exception {
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
 
+        PageResponse<Playlist> response = new PageResponse<>();
         List<Playlist> playlists = new ArrayList<>();
-        playlistRepository.findAll().forEach(playlists::add);
+        Page<Playlist> playlistPage = null;
+
+        if (title != null){
+            playlistPage = playlistRepository.findByTitle(title.toLowerCase(), PageRequest.of(pageNum, pageSize));
+        }else{
+           playlistPage = playlistRepository.findAll(PageRequest.of(pageNum, pageSize));
+        }
+
+        try {
+            playlistPage.forEach(playlists::add);
+        }catch (Exception exception){
+            logger.error("Error fetching playlist", exception);
+        }
+
         //remove deleted playlists
         playlists = playlists.stream()
                 .filter(playlist -> !playlist.isDeleted())
                 .collect(Collectors.toList());
 
-        return playlists;
+        response.setContent(playlists);
+        response.setPageNum(playlistPage.getNumber());
+        response.setPageSize(playlistPage.getSize());
+        response.setNumberOfElements(playlistPage.getNumberOfElements());
+        response.setTotalElements(playlistPage.getTotalElements());
+        response.setTotalPages(playlistPage.getTotalPages());
+
+        return response;
 
     }
 
@@ -94,10 +135,10 @@ public class MusicService {
             throw new BadRequestException("Song array is empty!");
         }
 
-        long playlistCount = playlistRepository.countByName(playlistRequest.getName().toLowerCase());
+        long playlistCount = playlistRepository.countByTitle(playlistRequest.getName().toLowerCase());
 
-        if (playlistCount == 6){
-            throw new Exception("Playlist upload limit reached");
+        if (playlistCount >= 6){
+            throw new BadRequestException("Playlist upload limit reached");
         }
 
         for (long song: playlistRequest.getSongs()){
@@ -105,17 +146,15 @@ public class MusicService {
             if (music == null ){
                 throw new BadRequestException("Invalid song id");
             }else {
-                Playlist playlist = playlistRepository.findByTitle(playlistRequest.getName());
 
-                if (playlist == null){
-                    playlist = new Playlist();
-                    playlist.setTitle(playlistRequest.getName().toLowerCase());
-                    playlist.setUploadedBy(user);
-                    playlist.setDeleted(false);
+                Playlist playlist = new Playlist();
+                playlist.setTitle(playlistRequest.getName().toLowerCase());
+                playlist.setUploadedBy(user);
+                playlist.setDeleted(false);
 
-                    playlist.setSongId(music);
-                    playlistRepository.save(playlist);
-                }
+                playlist.setSongId(music);
+                playlistRepository.save(playlist);
+
             }
         }
 
@@ -161,5 +200,9 @@ public class MusicService {
             music.setDeleted(true);
             musicRepository.save(music);
         }
+    }
+
+    public long countSongs() {
+        return musicRepository.count();
     }
 }

@@ -4,12 +4,7 @@ import com.wemeet.dating.dao.BlockRepository;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.model.entity.Block;
-import com.wemeet.dating.model.entity.Swipe;
 import com.wemeet.dating.model.entity.User;
-
-
-import com.wemeet.dating.model.entity.UserPreference;
-import com.wemeet.dating.model.enums.SwipeType;
 import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.PageResponse;
 import org.slf4j.Logger;
@@ -19,9 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -121,6 +114,4 @@ public class BlockService {
 
 
     }
-
-
 }

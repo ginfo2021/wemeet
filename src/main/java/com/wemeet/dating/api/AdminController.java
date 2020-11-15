@@ -203,7 +203,7 @@ public class AdminController {
     @PostMapping(value = "/music/upload", produces = MediaType.APPLICATION_JSON_VALUE)
 
     public ApiResponse uploadMusic(@AuthenticationPrincipal UserResult userResult,
-                                   @ModelAttribute MusicUploadRequest request
+                                   @Validated @ModelAttribute MusicUploadRequest request
                                    ) throws Exception {
 
         storageService.storeMusicFiles(userResult, request);
@@ -262,12 +262,13 @@ public class AdminController {
     @AdminUser(message = "Current User Not Admin")
     @GetMapping(value = "/music/list", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse getMusicList(@AuthenticationPrincipal UserResult userResult,
-                                       @RequestParam(defaultValue = "0") int pageNum,
+                                    @RequestParam(required = false) String title,
+                                    @RequestParam(defaultValue = "0") int pageNum,
                                        @RequestParam(defaultValue = "10") int pageSize) throws Exception {
 
         return ApiResponse.builder()
                 .message("Fetched  successfully")
-                .data(musicService.getMusicList(userResult.getUser(), pageNum, pageSize))
+                .data(musicService.getMusicList(title, userResult.getUser(), pageNum, pageSize))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
@@ -276,12 +277,24 @@ public class AdminController {
     @AdminUser(message = "Current User Not Admin")
     @GetMapping(value = "/playlist", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse getPlaylist(@AuthenticationPrincipal UserResult userResult,
-                                    @RequestParam(defaultValue = "0") int pageNum,
+                                   @RequestParam(required = false) String title,
+                                   @RequestParam(defaultValue = "0") int pageNum,
                                     @RequestParam(defaultValue = "10") int pageSize) throws Exception {
 
         return ApiResponse.builder()
                 .message("Fetched  successfully")
-                .data(musicService.getPlaylist(userResult.getUser()))
+                .data(musicService.getPlaylist(title, userResult.getUser(), pageNum, pageSize))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @GetMapping(value = "/songs/count", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse countSongs(@AuthenticationPrincipal UserResult userResult
+                                  ) throws Exception {
+
+        return ApiResponse.builder()
+                .message("Fetched  successfully")
+                .data(musicService.countSongs())
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
