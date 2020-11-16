@@ -11,6 +11,7 @@ public interface PlaylistRepository extends BaseRepository<Playlist, Long> {
     @Query(value = "select * from playlist where title = :name and song_id = :music", nativeQuery = true)
     Playlist findBySongId(Music music);
 
+    @Query(value = "select * from playlist where title like :title order by date_created desc", nativeQuery = true)
     Page<Playlist> findByTitle(String title, Pageable pageable);
 
     Playlist findAllByTitle(String title);
