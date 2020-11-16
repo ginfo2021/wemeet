@@ -165,23 +165,16 @@ public class MusicService {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
 
-        for (long song: request.getSongs()){
-            Music music = musicRepository.findById(song).orElse(null);
+        List<Playlist> playlists = (List<Playlist>) playlistRepository.findAllById(request.getSongs());
 
-            if (music == null){
-                throw new BadRequestException("Invalid song id");
-            }
+        if (playlists.isEmpty()){
+            throw new BadRequestException("Song does not exist in playlist");
+        }
 
-            Playlist playlist = playlistRepository.findBySongId(music);
-
-            if (playlist == null){
-                throw new BadRequestException("Song does not exist in playlist");
-            }
-
+        playlists.forEach(playlist -> {
             playlist.setDeleted(true);
             playlistRepository.save(playlist);
-
-        }
+        });
 
     }
 
@@ -190,16 +183,16 @@ public class MusicService {
             throw new InvalidJwtAuthenticationException("User with token does not exist");
         }
 
-        for (long song: request.getSongs()){
-            Music music = musicRepository.findById(song).orElse(null);
+        List<Music> songs = (List<Music>) musicRepository.findAllById(request.getSongs());
 
-            if (music == null){
-                throw new BadRequestException("Invalid Song ID");
-            }
-
-            music.setDeleted(true);
-            musicRepository.save(music);
+        if (songs.isEmpty()){
+            throw new BadRequestException("Song does not exist in playlist");
         }
+
+        songs.forEach(song -> {
+            song.setDeleted(true);
+            musicRepository.save(song);
+        });
     }
 
     public long countSongs() {
