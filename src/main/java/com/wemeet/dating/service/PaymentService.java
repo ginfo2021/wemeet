@@ -88,7 +88,7 @@ public class PaymentService {
         PlanResponse planResponse = paystackService.getPlans(PlanResponse.class);
 
         planResponse.getData().forEach(plan -> {
-            Plan plan1 = planRepository.findByCode(plan.getPlan_code());
+            Plan plan1 = planRepository.findFirstByCodeAndName(plan.getPlan_code(), plan.getName().toUpperCase());
             if (plan1 == null) {
                 plan1 = new Plan();
                 plan1.setAmount(plan.getAmount());
