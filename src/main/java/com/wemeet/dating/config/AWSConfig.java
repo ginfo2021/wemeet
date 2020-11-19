@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Primary;
 public class AWSConfig {
     
     @Bean
-    public AmazonS3 client(AWSCredentials awsCredentials) {
+    public AmazonS3 client(AAWSCredentialsProvider awsCredentialsProvider) {
         AmazonS3Client amazonS3Client = new AmazonS3Client(awsCredentials);
         amazonS3Client.setRegion(Region.getRegion(Regions.valueOf("eu-west-1")));
         return amazonS3Client;
