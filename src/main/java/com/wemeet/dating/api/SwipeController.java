@@ -1,7 +1,6 @@
 package com.wemeet.dating.api;
 
 import com.wemeet.dating.model.request.SwipeRequest;
-import com.wemeet.dating.model.request.UserProfile;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.UserResult;
@@ -46,7 +45,6 @@ public class SwipeController {
     @NotSuspendedUser(message = "User is suspended")
     @ActiveUser(message = "User not active")
     @GetMapping(value = "/matches", produces = MediaType.APPLICATION_JSON_VALUE)
-
     public ApiResponse getUserMatches(@AuthenticationPrincipal UserResult userResult,
                                       @RequestParam(defaultValue = "0") int pageNum,
                                       @RequestParam(defaultValue = "10") int pageSize) throws Exception {
@@ -61,7 +59,6 @@ public class SwipeController {
     @NotSuspendedUser(message = "User is suspended")
     @ActiveUser(message = "User not active")
     @GetMapping(value = "/suggest", produces = MediaType.APPLICATION_JSON_VALUE)
-
     public ApiResponse getSwipeSuggestion(@AuthenticationPrincipal UserResult userResult,
                                           @RequestParam(defaultValue = "false") boolean locationFilter) throws Exception {
 
@@ -71,6 +68,4 @@ public class SwipeController {
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
-
-
 }

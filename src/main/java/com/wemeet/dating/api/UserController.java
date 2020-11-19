@@ -186,7 +186,6 @@ public class UserController {
     @NotSuspendedUser(message = "User is suspended")
     @ActiveUser(message = "User not active")
     @GetMapping(value = "/blocks", produces = MediaType.APPLICATION_JSON_VALUE)
-
     public ApiResponse getUserBlocks(@AuthenticationPrincipal UserResult userResult,
                                       @RequestParam(defaultValue = "0") int pageNum,
                                       @RequestParam(defaultValue = "10") int pageSize) throws Exception {

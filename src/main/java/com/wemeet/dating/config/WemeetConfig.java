@@ -36,4 +36,7 @@ public class WemeetConfig {
     @Value("${default.plan.code}")
     private String weMeetDefaultPlanCode;
 
+    @Value("${cloud.aws.region.static}")
+    private String region;
+
 }

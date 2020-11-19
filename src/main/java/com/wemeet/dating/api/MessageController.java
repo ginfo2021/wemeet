@@ -21,7 +21,6 @@ import javax.validation.Valid;
 @Validated
 public class MessageController {
 
-
     private final MessageService messageService;
     private final PushNotificationService notificationService;
 
