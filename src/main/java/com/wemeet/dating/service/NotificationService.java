@@ -43,6 +43,7 @@ public class NotificationService {
            String message = "copy token" + " " + emailVerification.getToken();
 
            Personalization personalization = new Personalization();
+           personalization.setSubject(subject);
            personalization.addDynamicTemplateData("name", emailVerification.getUserEmail());
            personalization.addDynamicTemplateData("token", message);
            personalization.addTo(new Email(emailVerification.getUserEmail()));
@@ -64,6 +65,7 @@ public class NotificationService {
             String message = "You've been invited copy token" + " " + adminInvite.getToken();
             //move token creation here
             Personalization personalization = new Personalization();
+            personalization.setSubject(subject);
             personalization.addDynamicTemplateData("name", adminInvite.getUserEmail());
             personalization.addDynamicTemplateData("token", message);
             personalization.addTo(new Email(adminInvite.getUserEmail()));
@@ -83,6 +85,7 @@ public class NotificationService {
 
             String message = "copy token" + " " + forgotPassword.getToken();
             Personalization personalization = new Personalization();
+            personalization.setSubject(subject);
             personalization.addDynamicTemplateData("name", forgotPassword.getUser().getFirstName());
             personalization.addDynamicTemplateData("token", message);
             personalization.addTo(new Email(forgotPassword.getUser().getEmail()));
