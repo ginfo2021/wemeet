@@ -10,6 +10,7 @@ import com.wemeet.dating.model.request.FileUploadRequest;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.aws.core.io.s3.SimpleStorageResourceLoader;
 import org.springframework.core.io.Resource;
@@ -23,7 +24,10 @@ import java.util.UUID;
 @Service
 public class S3Service {
     private SimpleStorageResourceLoader simpleStorageResourceLoader;
+
+    @Autowired
     private AmazonS3 amazonS3;
+
     private final String S3_BUCKET_IMAGE_PATH = "images/";
     private final String S3_BUCKET_MUSIC_PATH = "music/";
 
