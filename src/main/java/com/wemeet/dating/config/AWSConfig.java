@@ -18,9 +18,9 @@ public class AWSConfig {
     private WemeetConfig wemeetConfig;
 
     @Bean
-    public AmazonS3 amazonS3Client(AWSCredentialsProvider awsCredentialsProvider) {
+    public AmazonS3 amazonS3Client() {
         AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard();
-        builder.withCredentials(awsCredentialsProvider);
+        builder.withCredentials(DefaultAWSCredentialsProviderChain.getInstance());
         builder.setRegion(wemeetConfig.getRegion());
         AmazonS3 amazonS3 = builder.build();
         return amazonS3;
