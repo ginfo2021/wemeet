@@ -1,6 +1,6 @@
 package com.wemeet.dating.config;
 
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -18,8 +18,8 @@ public class AWSConfig {
 
     @Bean
     public AmazonS3 amazonS3() {
-        InstanceProfileCredentialsProvider provider
-                = new InstanceProfileCredentialsProvider(true);
+        DefaultAWSCredentialsProviderChain provider
+                = new DefaultAWSCredentialsProviderChain();
         return AmazonS3ClientBuilder.standard()
                 .withCredentials(provider)
                 .withRegion(Regions.EU_WEST_1)
