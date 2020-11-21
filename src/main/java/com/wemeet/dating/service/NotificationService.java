@@ -40,12 +40,10 @@ public class NotificationService {
            EmailVerification emailVerification = event.getEmailVerification();
            String subject = "Registration Confirmation";
 
-           String message = "copy token" + " " + emailVerification.getToken();
-
            Personalization personalization = new Personalization();
            personalization.setSubject(subject);
            personalization.addDynamicTemplateData("name", emailVerification.getUserEmail());
-           personalization.addDynamicTemplateData("token", message);
+           personalization.addDynamicTemplateData("token", emailVerification.getToken());
            personalization.addTo(new Email(emailVerification.getUserEmail()));
 
            this.sendgridMailer("d-cbbaa9a4cc4648cc8643d4ef85508d45", personalization);
@@ -62,12 +60,11 @@ public class NotificationService {
             AdminInvite adminInvite = event.getAdminInvite();
             String subject = "Admin Invitation";
 
-            String message = "You've been invited copy token" + " " + adminInvite.getToken();
             //move token creation here
             Personalization personalization = new Personalization();
             personalization.setSubject(subject);
             personalization.addDynamicTemplateData("name", adminInvite.getUserEmail());
-            personalization.addDynamicTemplateData("token", message);
+            personalization.addDynamicTemplateData("token", adminInvite.getToken());
             personalization.addTo(new Email(adminInvite.getUserEmail()));
 
             this.sendgridMailer("d-cbbaa9a4cc4648cc8643d4ef85508d45", personalization);
@@ -83,11 +80,10 @@ public class NotificationService {
             ForgotPassword forgotPassword = event.getForgotPassword();
             String subject = "Password Reset Confirmation";
 
-            String message = "copy token" + " " + forgotPassword.getToken();
             Personalization personalization = new Personalization();
             personalization.setSubject(subject);
             personalization.addDynamicTemplateData("name", forgotPassword.getUser().getFirstName());
-            personalization.addDynamicTemplateData("token", message);
+            personalization.addDynamicTemplateData("token", forgotPassword.getToken());
             personalization.addTo(new Email(forgotPassword.getUser().getEmail()));
 
             this.sendgridMailer("d-cbbaa9a4cc4648cc8643d4ef85508d45", personalization);
