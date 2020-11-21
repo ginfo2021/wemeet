@@ -98,7 +98,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleInvalidCredentialException(InvalidCredentialException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.SUSPENDED_USER, ex, HttpStatus.UNAUTHORIZED);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.INVALID_USERNAME_PASSWORD, ex, HttpStatus.UNAUTHORIZED);
         return new ResponseEntity<>(apiResponse, HttpStatus.UNAUTHORIZED);
 
     }
@@ -108,7 +108,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleSuspendedUserException(SuspendedUserException ex) {
         ex.printStackTrace();
 
-        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.USER_NOT_PREMIUM, ex, HttpStatus.UNAUTHORIZED);
+        apiResponse = buildErrorResponse(ex.getMessage(), new ArrayList<>(), ResponseCode.SUSPENDED_USER, ex, HttpStatus.UNAUTHORIZED);
         return new ResponseEntity<>(apiResponse, HttpStatus.UNAUTHORIZED);
 
     }

@@ -19,7 +19,6 @@ public class UserSignup {
     @NotBlank
     private String firstName;
 
-    @NotBlank
     private String lastName;
 
     @NotNull

@@ -41,25 +41,25 @@ public class SongRequestService {
         return songRequestRepository.findById(id).orElse(null);
     }
 
-    public PageResponse<SongRequest> getUsersRequests(User user, int pageNum, int pageSize) throws Exception {
+    public PageResponse<SongRequest> getUsersRequests(User user, String description, int pageNum, int pageSize) throws Exception {
         if (user == null || user.getId() <= 0) {
-            throw new BadRequestException("Reported User does Not exist");
+            throw new BadRequestException("User does Not exist");
         }
         return new PageResponse<>(songRequestRepository.findByRequesterOrderByIdDesc(user, PageRequest.of(pageNum, pageSize)));
 
     }
 
-    public PageResponse<SongRequest> getAllRequests(int pageNum, int pageSize) throws Exception {
+    public PageResponse<SongRequest> getAllRequests(String description, int pageNum, int pageSize) throws Exception {
         return new PageResponse<>(songRequestRepository.findAll(PageRequest.of(pageNum, pageSize)));
 
     }
 
-    public PageResponse<SongRequest> getRequests(Long userId, int pageNum, int pageSize) throws Exception {
+    public PageResponse<SongRequest> getRequests(Long userId,String description, int pageNum, int pageSize) throws Exception {
         if (userId == null) {
-            return getAllRequests(pageNum, pageSize);
+            return getAllRequests(description,pageNum, pageSize);
         } else {
             User user = userService.findById(userId);
-            return getUsersRequests(user, pageNum, pageSize);
+            return getUsersRequests(user,description, pageNum, pageSize);
         }
     }
 

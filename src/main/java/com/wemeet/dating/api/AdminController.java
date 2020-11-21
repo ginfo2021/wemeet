@@ -151,12 +151,13 @@ public class AdminController {
 
     public ApiResponse getSongRequests(@AuthenticationPrincipal UserResult userResult,
                                         @RequestParam(value = "userId", required = false) Long userId,
+                                       @RequestParam(value = "description", required = false) String description,
                                         @RequestParam(defaultValue = "0") int pageNum,
                                         @RequestParam(defaultValue = "10") int pageSize) throws Exception {
 
         return ApiResponse.builder()
                 .message("Fetched  successfully")
-                .data(songRequestService.getRequests(userId, pageNum, pageSize))
+                .data(songRequestService.getRequests(userId, description, pageNum, pageSize))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
