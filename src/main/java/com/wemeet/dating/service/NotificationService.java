@@ -67,7 +67,7 @@ public class NotificationService {
             personalization.addDynamicTemplateData("token", adminInvite.getToken());
             personalization.addTo(new Email(adminInvite.getUserEmail()));
 
-            this.sendgridMailer("d-cbbaa9a4cc4648cc8643d4ef85508d45", personalization);
+            this.sendgridMailer("d-6503b1c272d54969be402e4c26427a99", personalization);
         }catch(Exception exception){
             logger.error("Unable to send admin invitation email", exception);
         }
@@ -86,7 +86,7 @@ public class NotificationService {
             personalization.addDynamicTemplateData("token", forgotPassword.getToken());
             personalization.addTo(new Email(forgotPassword.getUser().getEmail()));
 
-            this.sendgridMailer("d-cbbaa9a4cc4648cc8643d4ef85508d45", personalization);
+            this.sendgridMailer("d-6503b1c272d54969be402e4c26427a99", personalization);
 
         }catch(Exception exception){
             logger.error("Unable to send reset password email", exception);
