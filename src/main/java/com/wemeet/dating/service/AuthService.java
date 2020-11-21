@@ -1,6 +1,5 @@
 package com.wemeet.dating.service;
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.wemeet.dating.config.WemeetConfig;
 import com.wemeet.dating.config.security.JwtTokenHandler;
 import com.wemeet.dating.dao.PlanRepository;
@@ -28,13 +27,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
-
-import static com.aventrix.jnanoid.jnanoid.NanoIdUtils.DEFAULT_ALPHABET;
-import static com.aventrix.jnanoid.jnanoid.NanoIdUtils.DEFAULT_NUMBER_GENERATOR;
+import java.util.Random;
 
 @Service
 public class AuthService {
@@ -50,8 +48,6 @@ public class AuthService {
     private final AdminInviteService adminInviteService;
     private final PlanRepository planRepository;
     private final WemeetConfig config;
-    public static final char[] VERIFY_EMAIL_ALPHABET =
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     @Value("${forgot.password.token.expire.hour}")
     private long passwordExpiryInHour;
@@ -187,7 +183,7 @@ public class AuthService {
 
         AdminInvite adminInvite = new AdminInvite();
         adminInvite.setUserEmail(email);
-        adminInvite.setToken(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8));
+        adminInvite.setToken(new DecimalFormat("000000").format(new Random().nextInt(999999)));
         adminInvite.setActive(true);
 
         adminInvite = adminInviteService.saveInvite(adminInvite);
@@ -241,7 +237,8 @@ public class AuthService {
         EmailVerification emailVerification = new EmailVerification();
 
         emailVerification.setUserEmail(userSignup.getEmail());
-        emailVerification.setToken(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8));
+
+        emailVerification.setToken(new DecimalFormat("000000").format(new Random().nextInt(999999)));
         emailVerification.setActive(true);
 
         emailVerification = emailVerificationService.saveEmail(emailVerification);
@@ -318,7 +315,7 @@ public class AuthService {
         }
         ForgotPassword forgotPasswordEntity = new ForgotPassword();
         forgotPasswordEntity.setActive(true);
-        forgotPasswordEntity.setToken(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, DEFAULT_ALPHABET, 15));
+        forgotPasswordEntity.setToken(new DecimalFormat("000000").format(new Random().nextInt(999999)));
         forgotPasswordEntity.setUser(user);
         forgotPasswordEntity.setExpiresAt(LocalDateTime.now().plusHours(passwordExpiryInHour));
 
@@ -419,7 +416,7 @@ public class AuthService {
         if (emailVerification == null || !emailVerification.isActive()) {
             emailVerification = new EmailVerification();
             emailVerification.setUserEmail(user.getEmail());
-            emailVerification.setToken(NanoIdUtils.randomNanoId(DEFAULT_NUMBER_GENERATOR, VERIFY_EMAIL_ALPHABET, 8));
+            emailVerification.setToken(new DecimalFormat("000000").format(new Random().nextInt(999999)));
             emailVerification.setActive(true);
             emailVerification = emailVerificationService.saveEmail(emailVerification);
         }
