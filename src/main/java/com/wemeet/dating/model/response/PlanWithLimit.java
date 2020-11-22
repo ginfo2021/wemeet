@@ -14,6 +14,7 @@ public class PlanWithLimit {
     private Long amount;
     private String period;
     private String currency;
+    private boolean currentPlan;
     private FeatureLimit limits;
 
 }

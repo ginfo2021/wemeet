@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -45,30 +46,39 @@ public class SongRequestService {
         if (user == null || user.getId() <= 0) {
             throw new BadRequestException("User does Not exist");
         }
-        return new PageResponse<>(songRequestRepository.findByRequesterOrderByIdDesc(user, PageRequest.of(pageNum, pageSize)));
+
+        if (!StringUtils.hasText(description)) {
+            return new PageResponse<>(songRequestRepository.findByRequesterOrderByIdDesc(user, PageRequest.of(pageNum, pageSize)));
+        }
+        return new PageResponse<>(songRequestRepository.findByRequesterAndDescriptionContainingIgnoreCaseOrderByIdDesc(user, description, PageRequest.of(pageNum, pageSize)));
+
 
     }
 
     public PageResponse<SongRequest> getAllRequests(String description, int pageNum, int pageSize) throws Exception {
-        return new PageResponse<>(songRequestRepository.findAll(PageRequest.of(pageNum, pageSize)));
+
+        if (!StringUtils.hasText(description)) {
+            return new PageResponse<>(songRequestRepository.findAll( PageRequest.of(pageNum, pageSize)));
+        }
+        return new PageResponse<>(songRequestRepository.findByDescriptionContainingIgnoreCaseOrderByIdDesc(description,PageRequest.of(pageNum, pageSize)));
 
     }
 
-    public PageResponse<SongRequest> getRequests(Long userId,String description, int pageNum, int pageSize) throws Exception {
+    public PageResponse<SongRequest> getRequests(Long userId, String description, int pageNum, int pageSize) throws Exception {
         if (userId == null) {
-            return getAllRequests(description,pageNum, pageSize);
+            return getAllRequests(description, pageNum, pageSize);
         } else {
             User user = userService.findById(userId);
-            return getUsersRequests(user,description, pageNum, pageSize);
+            return getUsersRequests(user, description, pageNum, pageSize);
         }
     }
 
 
     public void deleteSongRequests(List<Long> requestIds) {
-        for (Long id: requestIds){
-            try{
-            songRequestRepository.deleteById(id);
-            }catch (EmptyResultDataAccessException ex){
+        for (Long id : requestIds) {
+            try {
+                songRequestRepository.deleteById(id);
+            } catch (EmptyResultDataAccessException ex) {
 
             }
         }

@@ -105,9 +105,9 @@ public class PaymentService {
         planRepository.findAll().forEach(plan -> {
             finalPlanWithLimits.add(featureLimitService.findPlanWithLimitByCode(plan.getCode()));
         });
-        planWithLimits = planWithLimits.stream()
-                .filter(plan -> !plan.getName().toUpperCase().equals(user.getType()))
-                .collect(Collectors.toList());
+        planWithLimits.stream()
+                .filter(plan -> plan.getName().toUpperCase().equals(user.getType()))
+                .forEach(planWithLimit -> planWithLimit.setCurrentPlan(true));
 
         return planWithLimits;
     }
