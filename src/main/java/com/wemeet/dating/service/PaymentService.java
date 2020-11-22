@@ -235,7 +235,6 @@ public class PaymentService {
         if (transaction != null) {
             transaction.setStatus(transactionData.getStatus());
             transaction.setAmount(transactionData.getAmount());
-            transaction.setPayment_method(transaction.getPayment_method());
             transaction.setPayment_method(transactionData.getChannel());
 
             transactionRepository.save(transaction);
