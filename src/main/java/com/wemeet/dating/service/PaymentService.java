@@ -19,6 +19,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -227,7 +228,7 @@ public class PaymentService {
     }
 
     @Transactional
-    private void processChargeSuccess(Webhook webhook, PaymentWebhookRequest request) {
+    private void processChargeSuccess(Webhook webhook, PaymentWebhookRequest request) throws Exception {
         PaystackTransactionData transactionData = objectMapper.convertValue(request.getData(), PaystackTransactionData.class);
 
         Transaction transaction = transactionRepository.findByReference(transactionData.getReference());
@@ -235,9 +236,22 @@ public class PaymentService {
             transaction.setStatus(transactionData.getStatus());
             transaction.setAmount(transactionData.getAmount());
             transaction.setPayment_method(transaction.getPayment_method());
-
             transactionRepository.save(transaction);
 
+            if (transactionData.getPlan() != null && transactionData.getCustomer() != null && StringUtils.hasText(transactionData.getCustomer().getEmail())) {
+                User user = userRepository.findByEmailAndDeletedIsFalse(transactionData.getCustomer().getEmail());
+                if (user == null) {
+                    user = userRepository.findTop1ByEmailOrderByIdDesc(transactionData.getCustomer().getEmail());
+                }
+                if (user == null) {
+                    logger.error("user not found, charge success" + transactionData.getCustomer().getEmail());
+                    throw new Exception("User not found");
+                }
+                if(!user.getType().equalsIgnoreCase(transactionData.getPlan().getName().toUpperCase())){
+                    user.setType(transactionData.getPlan().getName().toUpperCase());
+                    userRepository.save(user);
+                }
+            }
             webhook.setCompleted(true);
             webhookRepository.save(webhook);
         }
@@ -273,8 +287,10 @@ public class PaymentService {
         subscription.setActive(true);
         subscriptionRepository.save(subscription);
 
-        user.setType(paystackSubscription.getPlan().getName().toUpperCase());
-        userRepository.save(user);
+        if(!user.getType().equalsIgnoreCase(paystackSubscription.getPlan().getName().toUpperCase())){
+            user.setType(paystackSubscription.getPlan().getName().toUpperCase());
+            userRepository.save(user);
+        }
 
         if (request.getEvent().equalsIgnoreCase("subscription.disable")) {
             accountExpiryService.createFutureExpiry(AccountExpiry.builder().expired(false).user(user).expiresAt(subscription.getNext_payment_date()).build());
