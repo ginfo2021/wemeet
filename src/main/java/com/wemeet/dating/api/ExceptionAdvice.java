@@ -26,6 +26,8 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.util.WebUtils;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +43,9 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
     @Autowired
     private ApplicationContext applicationContext;
+
+    @Autowired
+    private HttpServletRequest httpServletRequest;
 
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
@@ -238,6 +243,12 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
     private ApiResponse buildErrorResponse(String message, List<String> errorList, ResponseCode responseCode, Exception exception, HttpStatus httpStatus) {
         String logId = UUID.randomUUID().toString();
+        String fullUrl = null;
+        if (httpServletRequest != null) {
+            fullUrl = httpServletRequest.getRequestURL().toString();
+            if (StringUtils.hasText(httpServletRequest.getQueryString()))
+                fullUrl += "?" + httpServletRequest.getQueryString();
+        }
         try {
             ErrorRepository errorRepository = applicationContext.getBean("errorRepository", ErrorRepository.class);
             errorRepository.save(
@@ -245,6 +256,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                     WeMeetError.builder()
                             .logId(logId)
                             .message(message)
+                            .path(fullUrl)
                             .responseCode(responseCode)
                             .httpResponseCode(httpStatus.value())
                             .stackTrace(ExceptionUtils.getStackTrace(exception))

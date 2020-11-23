@@ -23,6 +23,7 @@ public class WeMeetError {
     private Long id;
     private String logId;
     private String message;
+    private String path;
     @Lob
     private String stackTrace;
 

@@ -154,6 +154,7 @@ public class UserService {
         UserProfilePlan profilePlan = new UserProfilePlan();
         BeanUtils.copyProperties(getProfile(user), profilePlan);
         profilePlan.setPlan(featureLimitService.findPlanWithLimitByName(user.getType()));
+        profilePlan.getPlan().setCurrentPlan(true);
 
         return profilePlan;
     }
@@ -414,7 +415,9 @@ public class UserService {
         if (user == null || user.getId() <= 0) {
             throw new InvalidJwtAuthenticationException("User with token does Not exist");
         }
-        return featureLimitService.findPlanWithLimitByName(user.getType());
+        PlanWithLimit plan = featureLimitService.findPlanWithLimitByName(user.getType());
+        plan.setCurrentPlan(true);
+        return plan;
     }
 }
 
