@@ -67,7 +67,7 @@ public class UserController {
 
         return ApiResponse.builder()
                 .message("Fetched UserDetails successfully")
-                .data(userService.getProfile(userResult.getUser()))
+                .data(userService.getProfileWithPlan(userResult.getUser()))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }

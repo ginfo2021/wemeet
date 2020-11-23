@@ -150,6 +150,14 @@ public class UserService {
         return profileBig;
     }
 
+    public UserProfilePlan getProfileWithPlan(User user) throws Exception {
+        UserProfilePlan profilePlan = new UserProfilePlan();
+        BeanUtils.copyProperties(getProfile(user), profilePlan);
+        profilePlan.setPlan(featureLimitService.findPlanWithLimitByName(user.getType()));
+
+        return profilePlan;
+    }
+
     public UserProfile getProfile(User user) throws Exception {
         UserProfile userProfile = new UserProfile();
         if (user == null || user.getId() <= 0) {
