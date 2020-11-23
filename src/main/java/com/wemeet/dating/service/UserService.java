@@ -332,7 +332,7 @@ public class UserService {
         List<UserProfile> userProfiles = new ArrayList<>();
         PageResponse<UserProfile> userProfilePage = new PageResponse<>();
         Page<User> userList = userRepository.findBySuspendedIsTrueAndDeletedIsFalse(PageRequest.of(pageNum, pageSize));
-        
+
         userList.toList().forEach(a -> {
             try {
                 userProfiles.add(getProfile(a.getId()));
