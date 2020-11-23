@@ -28,8 +28,6 @@ public class WeMeetError {
     private String stackTrace;
 
 
-
-
     @Enumerated(EnumType.STRING)
     private ResponseCode responseCode;
     private Integer httpResponseCode;

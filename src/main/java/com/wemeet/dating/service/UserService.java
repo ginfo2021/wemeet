@@ -332,8 +332,7 @@ public class UserService {
         List<UserProfile> userProfiles = new ArrayList<>();
         PageResponse<UserProfile> userProfilePage = new PageResponse<>();
         Page<User> userList = userRepository.findBySuspendedIsTrueAndDeletedIsFalse(PageRequest.of(pageNum, pageSize));
-
-
+        
         userList.toList().forEach(a -> {
             try {
                 userProfiles.add(getProfile(a.getId()));
@@ -399,7 +398,6 @@ public class UserService {
         userProfilePage.setTotalPages(userPage.getTotalPages());
         return userProfilePage;
 
-
     }
 
     public long getTotalMaleUsersCount() {
@@ -409,7 +407,6 @@ public class UserService {
     public long getTotalFemaleUsersCount() {
         return userRepository.getFemaleUsersCount();
     }
-
 
     public PlanWithLimit getUserPlanDetails(User user) throws Exception {
         if (user == null || user.getId() <= 0) {
