@@ -1,0 +1,46 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_ACCOUNT_ID: "542764922704"
+    IMAGE_REPO_NAME: "wemeetbackend"
+    IMAGE_TAG: "latest"
+
+phases:
+  install:
+    commands: 
+      # installation
+      - add-apt-repository ppa:cwchien/gradle
+      - apt-get update
+      - apt upgrade -y gradle
+    runtime-versions:
+      docker: 18
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+  build:
+    commands:
+      - echo Build started on `date`
+      - printenv
+      - docker --version
+      - gradle --version
+      - ./gradlew clean build
+#       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      - gradle docker
+      - echo Building the Docker image...
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - docker images -a
+      - echo Writing image definitions file...
+      - printf '[{"name":"wemeetbackenddev","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > imagedefinitions.json  
+      
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+artifacts:
+  files:
+    - build/libs/wemeet.jar
+    - imagedefinitions.json
+
