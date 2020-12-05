@@ -3,10 +3,7 @@ package com.wemeet.dating.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wemeet.dating.config.WemeetConfig;
-import com.wemeet.dating.dao.FeatureLimitRepository;
-import com.wemeet.dating.dao.PlanRepository;
-import com.wemeet.dating.dao.SubscriptionRepository;
-import com.wemeet.dating.dao.UserRepository;
+import com.wemeet.dating.dao.*;
 import com.wemeet.dating.exception.BadRequestException;
 import com.wemeet.dating.exception.InvalidJwtAuthenticationException;
 import com.wemeet.dating.exception.UserNotPremiumException;
@@ -47,6 +44,7 @@ public class UserService {
     private final SubscriptionRepository subscriptionRepository;
     private final PaystackService paystackService;
     private final FeatureLimitService featureLimitService;
+    private final UserDeviceService userDeviceService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -54,7 +52,7 @@ public class UserService {
     private ObjectMapper objectMapper;
 
     @Autowired
-    public UserService(UserPreferenceService userPreferenceService, UserRepository userRepository, DeletedUserService deletedUserService, UserImageService userImageService, WemeetConfig config, FeatureLimitRepository limitRepository, PlanRepository planRepository, SubscriptionRepository subscriptionRepository, PaystackService paystackService, FeatureLimitService featureLimitService) {
+    public UserService(UserPreferenceService userPreferenceService, UserRepository userRepository, DeletedUserService deletedUserService, UserImageService userImageService, WemeetConfig config, FeatureLimitRepository limitRepository, PlanRepository planRepository, SubscriptionRepository subscriptionRepository, PaystackService paystackService, FeatureLimitService featureLimitService, UserDeviceService userDeviceService) {
         this.userPreferenceService = userPreferenceService;
         this.userRepository = userRepository;
         this.deletedUserService = deletedUserService;
@@ -65,6 +63,7 @@ public class UserService {
         this.subscriptionRepository = subscriptionRepository;
         this.paystackService = paystackService;
         this.featureLimitService = featureLimitService;
+        this.userDeviceService = userDeviceService;
     }
 
     public User findUserByEmail(String email) {
@@ -415,6 +414,12 @@ public class UserService {
         PlanWithLimit plan = featureLimitService.findPlanWithLimitByName(user.getType());
         plan.setCurrentPlan(true);
         return plan;
+    }
+
+    public void updateuserDevice(UserDeviceRequest userDeviceRequest) {
+        UserDevice userDevice = userDeviceService.findOne(userDeviceRequest.getOldDeviceToken());
+        userDevice.setDeviceId(userDeviceRequest.getNewDeviceToken());
+        userDeviceService.saveUserDevice(userDevice);
     }
 }
 

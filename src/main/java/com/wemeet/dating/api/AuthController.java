@@ -4,10 +4,12 @@ package com.wemeet.dating.api;
 import com.wemeet.dating.exception.InvalidCredentialException;
 import com.wemeet.dating.model.request.ChangePasswordRequest;
 import com.wemeet.dating.model.request.ResetPasswordRequest;
+import com.wemeet.dating.model.request.UserDeviceRequest;
 import com.wemeet.dating.model.response.ApiResponse;
 import com.wemeet.dating.model.response.ResponseCode;
 import com.wemeet.dating.model.user.*;
 import com.wemeet.dating.service.AuthService;
+import com.wemeet.dating.service.UserService;
 import com.wemeet.dating.util.validation.constraint.AdminUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -27,10 +29,12 @@ public class AuthController {
 
 
     private final AuthService authService;
+    private final UserService userService;
 
     @Autowired
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
+        this.userService = userService;
     }
 
     @PostMapping(value = "/verify/email",
@@ -91,6 +95,17 @@ public class AuthController {
         authService.logout(logout);
         return ApiResponse.builder()
                 .message("Logout Successful")
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+    }
+
+    @PutMapping(value = "/device",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse updateDevicetoken(@Valid @RequestBody UserDeviceRequest userDeviceRequest) throws Exception {
+        userService.updateuserDevice(userDeviceRequest);
+        return ApiResponse.builder()
+                .message("Device token updated sucessfully")
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
     }
