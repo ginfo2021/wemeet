@@ -1,5 +1,6 @@
 package com.wemeet.dating.model.entity;
 
+import com.wemeet.dating.model.enums.MessageStatus;
 import com.wemeet.dating.model.enums.MessageType;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,6 +19,12 @@ public class Message{
 
     @Column(columnDefinition="TEXT", nullable = false)
     private String content;
+
+    @Column(nullable = false)
+    private String chat_id;
+
+    @Column(nullable = false)
+    private MessageStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", referencedColumnName = "id", nullable = false)
