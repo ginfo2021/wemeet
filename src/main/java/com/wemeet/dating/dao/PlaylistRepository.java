@@ -20,4 +20,7 @@ public interface PlaylistRepository extends BaseRepository<Playlist, Long> {
     long countByName(String name);
 
     long countByTitle(String title);
+
+    @Query(value = "SELECT * FROM playlist p inner join music m on m.id = p.song_id where m.deleted = false order by p.date_created desc", nativeQuery = true)
+    Page<Playlist> getAllSongsOnPlaylist(Pageable pageable);
 }
