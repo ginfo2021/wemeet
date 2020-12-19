@@ -53,14 +53,14 @@ public class MusicService {
         if (title != null){
             musicPage = musicRepository.findByTitle(title.toLowerCase(), PageRequest.of(pageNum, pageSize));
         }else {
-            musicPage = musicRepository.findAll(PageRequest.of(pageNum, pageSize));
+            musicPage = musicRepository.getAllSongs(PageRequest.of(pageNum, pageSize));
         }
 
         musicPage.forEach(songs::add);
         //remove deleted songs
         songs = songs
                 .stream()
-                .filter(music -> !music.isDeleted()).collect(Collectors.toList());
+                .collect(Collectors.toList());
 
         response.setContent(songs);
         response.setPageNum(musicPage.getNumber());
@@ -84,7 +84,7 @@ public class MusicService {
         if (title != null){
             playlistPage = playlistRepository.findByTitle(title.toLowerCase(), PageRequest.of(pageNum, pageSize));
         }else{
-           playlistPage = playlistRepository.findAll(PageRequest.of(pageNum, pageSize));
+           playlistPage = playlistRepository.getAllSongsOnPlaylist(PageRequest.of(pageNum, pageSize));
         }
 
         try {

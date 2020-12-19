@@ -9,6 +9,9 @@ public interface MusicRepository extends BaseRepository<Music, Long> {
 
     Page<Music> findAll(Pageable pageable);
 
-    @Query(value = "select * from music where title like :title order by date_created desc", nativeQuery = true)
+    @Query(value = "select * from music where title like :title and deleted = false order by date_created desc", nativeQuery = true)
     Page<Music> findByTitle(String title, Pageable pageable);
+
+    @Query(value = "select * from music where deleted = false order by date_created desc", nativeQuery = true)
+    Page<Music> getAllSongs(Pageable pageable);
 }
