@@ -1,6 +1,7 @@
 package com.wemeet.dating.model.user;
 
 
+import com.wemeet.dating.model.enums.Gender;
 import lombok.Data;
 
 import javax.validation.constraints.Email;
@@ -27,6 +28,10 @@ public class UserSignup {
 
     @NotBlank
     private String password;
+
+
+    @NotBlank
+    private Gender gender;
 
     @NotNull
     private Date dateOfBirth;

@@ -290,6 +290,7 @@ public class AuthService {
         newUser.setUserName(userSignup.getUserName());
         newUser.setEmail(userSignup.getEmail());
         newUser.setPhone(userSignup.getPhone());
+        newUser.setGender(userSignup.getGender());
         newUser.setActive(false);
         newUser.setPhoneVerified(false);
         newUser.setEmailVerified(false);
