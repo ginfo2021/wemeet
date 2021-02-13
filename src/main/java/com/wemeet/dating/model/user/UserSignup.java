@@ -23,19 +23,18 @@ public class UserSignup {
     private String lastName;
 
     @NotNull
-    @Size(min = 11, max = 11, message = "Minumum and maximum of 11 characters")
     private String userName;
 
     @NotBlank
     private String password;
 
-
-    @NotBlank
+    @NotNull
     private Gender gender;
 
     @NotNull
     private Date dateOfBirth;
     @NotBlank
+    @Size(min = 11, max = 11, message = "Minumum and maximum of 11 characters")
     private String phone;
     private String deviceId;
     private Double longitude;
