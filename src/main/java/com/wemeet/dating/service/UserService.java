@@ -182,8 +182,8 @@ public class UserService {
 
     @Transactional
     public UserProfile updateUserProfile(UserProfile userProfile, User user) throws Exception {
-
-        createOrUpdateUser(buildUserFromProfile(userProfile));
+        userProfile.setId(user.getId());
+        user = createOrUpdateUser(buildUserFromProfile(userProfile));
         userPreferenceService.createOrUpdatePreference(buildPreferenceFromProfile(userProfile));
 
 
