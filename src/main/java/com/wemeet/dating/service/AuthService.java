@@ -278,22 +278,24 @@ public class AuthService {
     }
 
     private User buildUserFromSignUp(UserSignup userSignup) throws BadRequestException {
+        if (Period.between(userSignup.getDateOfBirth().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate(), LocalDate.now()).getYears() < 18) {
+            throw new BadRequestException("You must Be 18 years to join this platform");
+        }
+
         User newUser = new User();
         newUser.setFirstName(userSignup.getFirstName());
         newUser.setLastName(userSignup.getLastName());
         newUser.setUserName(userSignup.getUserName());
         newUser.setEmail(userSignup.getEmail());
         newUser.setPhone(userSignup.getPhone());
+        newUser.setGender(userSignup.getGender());
         newUser.setActive(false);
         newUser.setPhoneVerified(false);
         newUser.setEmailVerified(false);
         if (userSignup.getPassword() != null) {
             newUser.setPassword(passwordEncoder.encode(userSignup.getPassword()));
-        }
-        if (Period.between(userSignup.getDateOfBirth().toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate(), LocalDate.now()).getYears() < 18) {
-            throw new BadRequestException("You must Be 18 years to join this platform");
         }
         newUser.setDateOfBirth(userSignup.getDateOfBirth());
         Plan defaultPlan = planRepository.findByCode(config.getWeMeetDefaultPlanCode());

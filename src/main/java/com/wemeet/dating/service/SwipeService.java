@@ -19,6 +19,7 @@ import com.wemeet.dating.model.response.PageResponse;
 import com.wemeet.dating.model.response.SwipeResponse;
 import com.wemeet.dating.model.response.SwipeSuggestions;
 import com.wemeet.dating.util.DateUtil;
+import com.wemeet.dating.util.GenericUtils;
 import com.wemeet.dating.util.LocationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,9 +183,12 @@ public class SwipeService {
                 || userPreference.getMaxAge() == null) {
             throw new PreferenceNotSetException("User has not set preferences, Update profile");
         }
+        List<BigInteger> swipeSuggestions;
 
-        List<BigInteger> swipeSuggestions =
-                swipeRepository.findSwipeSuggestions(user.getId(), userPreference.getGenderPreference().stream().map(Gender::getName).collect(Collectors.toList()), wemeetConfig.getWemeetSwipeSuggestionNumber());
+
+        swipeSuggestions = GenericUtils.combineAndStrip(swipeRepository.findSwipeSuggestions(user.getId(), userPreference.getGenderPreference().stream().map(Gender::getName).collect(Collectors.toList()), wemeetConfig.getWemeetSwipeSuggestionNumber())
+                , swipeRepository.findAdmirersWithPreferences(user.getId(), userPreference.getGenderPreference().stream().map(Gender::getName).collect(Collectors.toList()), wemeetConfig.getWemeetSwipeSuggestionNumber()/2)
+        );
 
         List<UserProfile> finalUserProfiles = userProfiles;
         swipeSuggestions.forEach(a -> {
@@ -192,6 +196,7 @@ public class SwipeService {
                 finalUserProfiles.add(getProfileWithUserDistance(a.longValue(), userPreference));
             } catch (Exception e) {
                 logger.error("Error fetching user profile for user id: " + a, e);
+                e.printStackTrace();
             }
         });
 

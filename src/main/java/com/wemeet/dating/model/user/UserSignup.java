@@ -7,6 +7,7 @@ import lombok.Data;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.Date;
 
 @Data
@@ -28,8 +29,12 @@ public class UserSignup {
     private String password;
 
     @NotNull
+    private Gender gender;
+
+    @NotNull
     private Date dateOfBirth;
     @NotBlank
+    @Size(min = 11, max = 11, message = "Minumum and maximum of 11 characters")
     private String phone;
     private String deviceId;
     private Double longitude;
