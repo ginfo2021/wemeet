@@ -28,7 +28,7 @@ public class UserSignup {
     @NotBlank
     private String password;
 
-    @NotNull
+    //@NotNull
     private Gender gender;
 
     @NotNull
