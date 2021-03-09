@@ -33,7 +33,7 @@ public class UserSignup {
 
     @NotNull
     private Date dateOfBirth;
-    @NotBlank
+//    @NotBlank
     @Size(min = 11, max = 11, message = "Minumum and maximum of 11 characters")
     private String phone;
     private String deviceId;

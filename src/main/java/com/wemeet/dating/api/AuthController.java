@@ -182,7 +182,7 @@ public class AuthController {
     }
 
 
-    @GetMapping(value = "/accounts/forgot-password",
+        @GetMapping(value = "/accounts/forgot-password",
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse forgotPassword(@RequestParam String email) throws Exception {
         authService.generatePasswordToken(email);
