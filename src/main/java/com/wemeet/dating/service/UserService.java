@@ -67,7 +67,6 @@ public class UserService {
     }
 
     public User findUserByEmail(String email) {
-        return null;
         User user = userRepository.findByEmailAndDeletedIsFalse(email);
         return user;
     }
