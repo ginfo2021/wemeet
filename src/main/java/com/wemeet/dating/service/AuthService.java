@@ -93,6 +93,8 @@ public class AuthService {
     }
 
     public UserResult login(UserLogin userLogin) throws InvalidCredentialException, SuspendedUserException {
+       
+        return null;
         User existingUser;
 
         existingUser = userService.findUserByEmail(userLogin.getEmail());
