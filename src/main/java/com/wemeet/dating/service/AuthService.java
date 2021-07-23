@@ -227,7 +227,7 @@ public class AuthService {
 
 
     @Transactional
-    public UserResult signUp(UserSignup userSignup) throws Exception {
+    public UserResult signUp1(UserSignup userSignup) throws Exception {
         User newUser = userService.findUserByEmail(userSignup.getEmail());
         if (newUser != null) {
             throw new DuplicateKeyException("This user has already signed up, go to login");
