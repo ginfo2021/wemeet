@@ -332,7 +332,7 @@ public class AuthService {
         newUser.setEmail(userSignup.getEmail());
         newUser.setPhone(userSignup.getPhone());
         newUser.setGender(userSignup.getGender());
-        newUser.setActive(userSignup.getActive());
+        newUser.setActive(false);
         newUser.setPhoneVerified(false);
         newUser.setEmailVerified(false);
         if (userSignup.getPassword() != null) {
