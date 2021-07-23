@@ -65,12 +65,12 @@ public class AuthController {
      @PostMapping(value = "/social-signup",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse socialSignUp(@Valid @RequestBody UserSignup userSignup) throws Exception {
+    public ApiResponse signUp(@Valid @RequestBody UserSignup userSignup) throws Exception {
 
         return ApiResponse
                 .builder()
                 .message("User Signed Up Successfully")
-                .data(authService.socialSignUp(userSignup))
+                .data(authService.signUp(userSignup))
                 .responseCode(ResponseCode.SUCCESS)
                 .build();
 
