@@ -61,6 +61,20 @@ public class AuthController {
                 .build();
 
     }
+    
+     @PostMapping(value = "/social-signup",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse socialSignUp(@Valid @RequestBody UserSignup userSignup) throws Exception {
+
+        return ApiResponse
+                .builder()
+                .message("User Signed Up Successfully")
+                .data(authService.socialSignUp(userSignup))
+                .responseCode(ResponseCode.SUCCESS)
+                .build();
+
+    }
 
     @PostMapping(value = "/signup/admin",
             consumes = MediaType.APPLICATION_JSON_VALUE,
