@@ -264,6 +264,45 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
+    public UserResult socialSignUp(UserSignup userSignup) throws Exception {
+        User newUser = userService.findUserByEmail(userSignup.getEmail());
+        if (newUser != null) {
+            throw new DuplicateKeyException("This user has already signed up, go to login");
+        }
+        newUser = userService.createOrUpdateUser(buildUserFromSocialSignUp(userSignup));
+
+        String accessToken = tokenHandler.createToken(newUser, null);
+
+        EmailVerification emailVerification = new EmailVerification();
+
+        emailVerification.setUserEmail(userSignup.getEmail());
+
+        emailVerification.setToken(new DecimalFormat("000000").format(new Random().nextInt(999999)));
+        emailVerification.setActive(true);
+
+        emailVerification = emailVerificationService.saveEmail(emailVerification);
+        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(emailVerification));
+
+        userPreferenceService.createBasePreferenceForUser(newUser, userSignup);
+        if (StringUtils.hasText(userSignup.getDeviceId())) {
+            UserDevice userDevice = new UserDevice();
+            userDevice.setDeviceId(userSignup.getDeviceId());
+            userDevice.setUser(newUser);
+            userDeviceService.saveUserDevice(userDevice);
+        }
+
+        return UserResult.builder()
+                .tokenInfo(
+                        TokenInfo
+                                .builder()
+                                .accessToken(accessToken)
+                                .tokenType(TokenType.BEARER)
+                                .build()
+                )
+                .user(newUser)
+                .build();
+    }
     private AdminUser buildUserFromSignUp(AdminSignup signup) throws BadRequestException {
         AdminUser newUser = new AdminUser();
         newUser.setFirstName(signup.getFirstName());
@@ -304,6 +343,32 @@ public class AuthService {
         return newUser;
     }
 
+    private User buildUserFromSocialSignUp(UserSignup userSignup) throws BadRequestException {
+        if (Period.between(userSignup.getDateOfBirth().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate(), LocalDate.now()).getYears() < 18) {
+            throw new BadRequestException("You must Be 18 years to join this platform");
+        }
+
+        User newUser = new User();
+        newUser.setFirstName(userSignup.getFirstName());
+        newUser.setLastName(userSignup.getLastName());
+        newUser.setUserName(userSignup.getUserName());
+        newUser.setEmail(userSignup.getEmail());
+        newUser.setPhone(userSignup.getPhone());
+        newUser.setGender(userSignup.getGender());
+        newUser.setActive(false);
+        newUser.setPhoneVerified(false);
+        newUser.setEmailVerified(false);
+        if (userSignup.getPassword() != null) {
+            newUser.setPassword(passwordEncoder.encode(userSignup.getPassword()));
+        }
+        newUser.setDateOfBirth(userSignup.getDateOfBirth());
+        Plan defaultPlan = planRepository.findByCode(config.getWeMeetDefaultPlanCode());
+        newUser.setType(defaultPlan.getName());
+
+        return newUser;
+    }
 
     public void verifyEmail(String token) throws BadRequestException {
         emailVerificationService.verifyEmail(token);
