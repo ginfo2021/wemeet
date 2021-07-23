@@ -39,4 +39,5 @@ public class UserSignup {
     private String deviceId;
     private Double longitude;
     private Double latitude;
+    private Boolean active;
 }
